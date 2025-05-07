@@ -22,6 +22,7 @@ def upload_sketch(sketch_name):
     
     try:
         subprocess.run(compile, check=True)
+        print(f"Successfully compiled sketch '{sketch_name}'")
         subprocess.run(upload, check=True)
         print(f"Successfully uploaded sketch '{sketch_name}'")
     except subprocess.CalledProcessError as e:
