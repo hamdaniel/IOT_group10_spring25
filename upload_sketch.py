@@ -1,37 +1,38 @@
 import subprocess
-import sys
+import argparse
 
-def upload_sketch(sketch_name):
+def upload_sketch(sketch_dir, port_number):
     fqbn = "esp32:esp32:esp32doit-devkit-v1"
-    port = "COM7"
-    
-    compile= [
+    port = f"COM{port_number}"
+
+    compile_cmd = [
         "arduino-cli",
         "compile",
         "--fqbn", fqbn,
         "--port", port,
-        sketch_name
+        sketch_dir
     ]
-    upload= [
+    upload_cmd = [
         "arduino-cli",
         "upload",
         "--fqbn", fqbn,
         "--port", port,
-        sketch_name
+        sketch_dir
     ]
-    
+
     try:
-        subprocess.run(compile, check=True)
-        print(f"Successfully compiled sketch '{sketch_name}'")
-        subprocess.run(upload, check=True)
-        print(f"Successfully uploaded sketch '{sketch_name}'")
+        subprocess.run(compile_cmd, check=True)
+        print(f"Successfully compiled sketch '{sketch_dir}'")
+        subprocess.run(upload_cmd, check=True)
+        print(f"Successfully uploaded sketch '{sketch_dir}'")
     except subprocess.CalledProcessError as e:
         print(f"Upload failed: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python upload_sketch.py <SketchName>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Compile and upload an Arduino sketch.")
+    parser.add_argument("sketch_dir", help="Path to the sketch directory")
+    parser.add_argument("--p", type=int, default=7, help="Port number (e.g., 7 for COM7)")
     
-    sketch_name = sys.argv[1]
-    upload_sketch(sketch_name)
+    args = parser.parse_args()
+
+    upload_sketch(args.sketch_dir, args.p)
