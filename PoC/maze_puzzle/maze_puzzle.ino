@@ -11,7 +11,7 @@
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 256 // Popular NeoPixel ring size
-#define ROW_LEN 16
+#define COL_LEN 16
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -31,10 +31,23 @@ typedef struct Maze {
 bool lastButton1State = HIGH;
 bool lastButton2State = HIGH;
 
-const uint wall = pixels.Color(5,5,0);
+const uint wall = pixels.Color(5,5,5);
 const uint player = pixels.Color(0,5,0);
 const uint target = pixels.Color(5,0,0);
 Maze m;
+
+
+int convert(int og)
+{
+  int x = og % 16;
+  int y = og / 16;
+  if(x % 2)
+  {
+    return x * COL_LEN + COL_LEN - y - 1;
+  }
+
+  return x * COL_LEN + y;
+}
 
 void setup() {
 
@@ -59,28 +72,39 @@ void setup() {
 
 void  updateMaze() {
 	String maze = SerialBT.readStringUntil('\n');
-  String start_loc = SerialBT.readStringUntil('\n');
-  String end_loc = SerialBT.readStringUntil('\n');
 
   Serial.print("maze: ");
   Serial.println(maze);
-  Serial.print("player: ");
-  Serial.println(start_loc);
-  Serial.print("target: ");
-  Serial.println(end_loc);
 
 	for (int i = 0; i < NUMPIXELS; i++) {
-		m.maze[i] = (maze[i] == '1');
-    Serial.print(m.maze[i]);
-	}
+    switch (maze[i])
+    {
+    case '0':
+      m.maze[i] = true;
+      break;
 
-	m.player = ((start_loc[3] -'0') + 10 * (start_loc[2] -'0')) * ROW_LEN + (start_loc[0] - '0') * 10 + (start_loc[1] - '0');
-	m.target = ((end_loc[3] -'0') + 10 * (end_loc[2] -'0')) * ROW_LEN + (end_loc[0] - '0') * 10 + (end_loc[1] - '0');
-	
-  Serial.print("calculated start: ");
+    case '1':
+      m.maze[i] = false;
+      break;
+    
+    case '2':
+      m.maze[i] = false;
+      m.player = i;
+      break;
+    
+    case '3':
+      m.maze[i] = false;
+      m.target = i;
+
+    default:
+      break;
+    }
+
+  }
+    
+  Serial.print("player index: ");
   Serial.println(m.player);
-
-  Serial.print("calculated target: ");
+  Serial.print("target index: ");
   Serial.println(m.target);
 
 }
@@ -92,13 +116,12 @@ void loop() {
     updateMaze();
   }
   for(int i = 0; i < NUMPIXELS; i++) { 
-    if(m.maze[i]) {
+    if(!m.maze[i]) {
       Serial.print("set pixel:");
-      Serial.println(i);
-      pixels.setPixelColor(i, wall);
+      pixels.setPixelColor(convert(i), wall);
     }
   }
-  pixels.setPixelColor(m.player, player);
-  pixels.setPixelColor(m.target, target);
+  pixels.setPixelColor(convert(m.player), player);
+  pixels.setPixelColor(convert(m.target), target);
   pixels.show(); 
 }

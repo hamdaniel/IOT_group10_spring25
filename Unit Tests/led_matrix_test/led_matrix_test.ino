@@ -2,16 +2,20 @@
 // Released under the GPLv3 license to match the rest of the
 // Adafruit NeoPixel library
 
+
+#include <stdbool.h>
 #include <Adafruit_NeoPixel.h>
+#include <stdbool.h>
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
 // Which pin on the Arduino is connected to the NeoPixels?
-#define PIN        2 // On Trinket or Gemma, suggest changing this to 1
+#define PIN        13 // On Trinket or Gemma, suggest changing this to 1
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS 256 // Popular NeoPixel ring size
+#define COL_LEN 16
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -19,7 +23,22 @@
 // strandtest example for more information on possible values.
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
+
+const uint32_t white =  pixels.Color(5, 5, 5);
 #define DELAYVAL 10 // Time (in milliseconds) to pause between pixels
+
+
+int calc_index(int og)
+{
+  int x = og % 16;
+  int y = og / 16;
+  if(x % 2)
+  {
+    return x * COL_LEN + COL_LEN - y - 1;
+  }
+
+  return x * COL_LEN + y;
+}
 
 void setup() {
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -34,22 +53,11 @@ void setup() {
 
 void loop() {
   pixels.clear(); // Set all pixel colors to 'off'
-
-
-  for(int i=0; i<NUMPIXELS; i++) { 
-
-  //test 1
-   // pixels.setPixelColor(i, pixels.Color(0, 0, 5));
-  //test 2
-   // pixels.setPixelColor(i, pixels.Color(0, 5, 0));
-  //test 3
-   // pixels.setPixelColor(i, pixels.Color(5, 0, 0));
-  //test 4
-  pixels.setPixelColor(i, pixels.Color(5, 5, 5));
-
-  pixels.show();  
-
-    delay(DELAYVAL); 
+  for(int i = 0; i < NUMPIXELS; i++)
+  {
+    pixels.setPixelColor(calc_index(i), white);
+    pixels.show();
+    delay(DELAYVAL);
   }
-  delay (1000);
+  
 }
