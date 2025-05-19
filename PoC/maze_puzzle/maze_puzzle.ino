@@ -20,11 +20,13 @@ void setup() {
 void loop() {
   // Check for Bluetooth messages
   if (SerialBT.available()) {
-    String incoming = SerialBT.readStringUntil('\n');
-    Serial.print("Received via Bluetooth: ");
-    Serial.println(incoming);  // Print to USB Serial monitor
+    String maze = SerialBT.readStringUntil('\n');
+    String locations = SerialBT.readStringUntil('\n');
+    Serial.print("Received via Bluetooth: \n");
+    Serial.print("Maze: \n");  // Print to USB Serial monitor
+    Serial.println(maze);  // Print to USB Serial monitor
+    Serial.println("Locations: \n");
+    Serial.println(locations);  // Print to USB Serial monitor
 	Serial.print("\n");
-  }
-
   }
 }
