@@ -6,8 +6,8 @@ import 'settingsScreen.dart';
 import 'dart:math';
 import 'Maze.dart';
 import 'dart:collection';
+import 'compass.dart';
 
-List<List<int>>? lastMaze; // Add this to your _MyAppState class
 
 void main() => runApp(MaterialApp(home: MyApp()));
 
@@ -17,12 +17,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  List<List<int>>? lastMaze;
+  Point<int>? playerPosition;
   BluetoothConnection? connection;
   String status = "Not connected";
   late BuildContext menuContext;
 
-  int timeToCompleteMaze = 5; // minutes
-  int visionAtMaze = 10; // pixels
+  int timeToCompleteMaze = 90; 
+  int visionAtMaze = 1;
 
   // Removed initState and auto-connect
 
@@ -171,18 +173,21 @@ String mazeString = maze.expand((row) => row).join();
 // Send maze string (just 0s and 1s, no prefix, no newline)
 _sendMessage("${mazeString}\n");
 
+String time_send = "${timeToCompleteMaze.toString().padLeft(3, '0')}";
+String vision_send = "${visionAtMaze.toString()}";
+
+_sendMessage("${time_send}\n");
+print ("Time to complete maze: $time_send");
+_sendMessage("${vision_send}\n");
+print ("Vision at maze: $vision_send");
   // Show the maze in a dialog
   showDialog(
     context: menuContext,
-    builder: (context) => AlertDialog(
-      title: Text('Maze (Start: [${start.x},${start.y}], End: [${end.x},${end.y}])'),
-      content: MazeWidget(maze: maze, start: start, end: end),
-      actions: [
-        TextButton(
-          child: Text('Close'),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
+    barrierDismissible: false,
+    builder: (context) => CompassDialog(
+      connection: connection,
+      end: end,
+      start:start
     ),
   );
 }
@@ -202,8 +207,7 @@ _sendMessage("${mazeString}\n");
         timeToCompleteMaze = result['time']!;
         visionAtMaze = result['vision']!;
       });
-      // Optionally send settings to ESP32:
-      // _sendMessage("SETTINGS:$timeToCompleteMaze,$visionAtMaze\n");
+  
     }
   }
 

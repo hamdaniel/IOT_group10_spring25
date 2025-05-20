@@ -23,28 +23,19 @@ UDRLInput* btns = nullptr;
 Maze* maze = nullptr;
 
 //BT init
-BluetoothSerial SerialBT;
+BluetoothSerial* SerialBT = nullptr;
 
-
-void sendLocations()
-{
-  // SerialBT.println(m.player);
-  // SerialBT.println(m.target);
-}
 
 
 
 void setup() {
 
-
+  SerialBT = new BluetoothSerial();
   Serial.begin(115200);              // USB serial monitor
-  SerialBT.begin("ESP32_BT_Server"); // Bluetooth name
+  SerialBT->begin("ESP32_BT_Server"); // Bluetooth name
   
   matrix = new LedMatrix();
   btns = new UDRLInput();
-
-  matrix->initMatrix();
-  btns->initInput();
   
   Serial.println("finished setup");
 }
@@ -52,9 +43,13 @@ void setup() {
 
 void loop() {
   //read from bluetooth
-  if (SerialBT.available()) {
-    String input =  SerialBT.readStringUntil('\n');
-    maze = new Maze(matrix, btns, input, 3);
+  if (SerialBT->available()) {
+    String boardStr =  SerialBT->readStringUntil('\n');
+    String time = SerialBT->readStringUntil('\n');
+    String dist = SerialBT->readStringUntil('\n');
+    Serial.print("got dist: ");
+    Serial.println(dist);
+    maze = new Maze(matrix, btns, SerialBT, boardStr, dist);
   }
   if(maze != nullptr)
   {
@@ -62,9 +57,13 @@ void loop() {
     {
       delete maze;
       maze = nullptr;
+      Serial.println("deleted maze!");
     }
   }
-  
+  else
+  {
+    matrix->startIdleAnimation();
+  }
+  matrix->updateAnimation();
 
-  //sendLocations();
 }

@@ -12,18 +12,19 @@ const int player_r = 0;
 const int player_g = 10;
 const int player_b = 0;
 
-Maze::Maze(LedMatrix* lm, UDRLInput* bs, const String input, int d)
+Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input, String d)
 {
 
 	led_matrix = lm;
 	btns = bs;
-	dist = d;
+  serialBT = bt;
+	dist = d[0]-'0';
 
 	//init moves array
 	move_amounts[0] = -ROW_LEN;
 	move_amounts[1] = ROW_LEN;
-  	move_amounts[2] = 1;
-  	move_amounts[3] = -1;
+  move_amounts[2] = 1;
+  move_amounts[3] = -1;
 		
 	
 	//init board & positions
@@ -55,8 +56,17 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, const String input, int d)
   }
 
   //init color arrays
-  wall_colors = new uint32_t[dist];
-  target_colors = new uint32_t[dist];
+  if(dist > 0)
+  {
+    wall_colors = new uint32_t[dist];
+    target_colors = new uint32_t[dist];
+  }
+  else
+  {
+    wall_colors = nullptr;
+    target_colors = nullptr;
+  }
+  
   player_color = led_matrix->generateColor(player_r, player_g, player_b);
   for(int i = 0; i < dist; i++)
   {
@@ -69,8 +79,11 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, const String input, int d)
 
 Maze::~Maze()
 {
-	delete wall_colors;
-	delete target_colors;
+  if(dist > 0)
+  {
+    delete wall_colors;
+    delete target_colors;
+  }
 }
 
 void Maze::drawMaze() {
@@ -110,7 +123,15 @@ void Maze::movePlayer()
     if(btns->moved(i))
     {
       int new_loc = player_pos + move_amounts[i];
-      player_pos = isValid(new_loc) ? new_loc : player_pos;
+      if(isValid(new_loc))
+      {
+        player_pos = new_loc;
+        String msg = "000";
+        msg[0] += player_pos / 100;
+        msg[1] += (player_pos % 100) / 10;
+        msg[2] += player_pos % 10;
+        serialBT->println(msg);
+      }
       return;
     }
   }
@@ -154,7 +175,7 @@ bool Maze::play()
   movePlayer();
   if(player_pos == target_pos)//win condition
   {
-    led_matrix->winAnimation();
+    led_matrix->startWinAnimation();
     return true;
   }
   //draw the maze
