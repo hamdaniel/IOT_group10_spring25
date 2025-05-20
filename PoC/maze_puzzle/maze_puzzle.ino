@@ -34,6 +34,18 @@ const uint wall = pixels.Color(5,5,5);
 const uint target = pixels.Color(5,0,0);
 const uint player = pixels.Color(0,5,0);
 
+int target_r = 15;
+int target_g = 0;
+int target_b = 0;
+
+int wall_r = 7;
+int wall_g = 7;
+int wall_b = 7;
+
+
+uint* targets;
+uint* walls;
+
 //BT init
 BluetoothSerial SerialBT;
 
@@ -119,10 +131,13 @@ void drawMaze() {
   
   for(int i = 0; i < NUMPIXELS; i++) { 
     if(!m.maze[i] && isVisible(i)) {
-      pixels.setPixelColor(convert(i), wall);
+      pixels.setPixelColor(convert(i), walls[chooseColor(i)]);
     }
   }
-  pixels.setPixelColor(convert(m.target), target);
+  if(isVisible(m.target))
+  {
+    pixels.setPixelColor(convert(m.target), targets[chooseColor(m.target)]);
+  }
   pixels.setPixelColor(convert(m.player), player);
   pixels.show(); 
 }
@@ -192,6 +207,30 @@ bool isVisible(int pixel)
   
 }
 
+void initColors()
+{
+
+  targets = (uint*)malloc(3*sizeof(pixels.Color(0,0,0)));
+  walls = (uint*)malloc(3*sizeof(pixels.Color(0,0,0)));
+
+  for(int i = 0; i < m.dist; i++)
+  {
+    targets[i] = pixels.Color(target_r * (m.dist + 1 - i), target_g * (m.dist + 1 - i), target_b * (m.dist + 1 - i));
+    walls[i] = pixels.Color(wall_r * (m.dist + 1 - i), wall_g * (m.dist + 1 - i), wall_b * (m.dist + 1 - i));
+  }
+}
+
+int chooseColor(int pixel)
+{
+  int pixel_x = pixel % COL_LEN;
+  int pixel_y = pixel / COL_LEN;
+  int player_x = m.player % COL_LEN;
+  int player_y = m.player / COL_LEN;
+  int abs_x = (pixel_x > player_x) ? (pixel_x - player_x) : (player_x - pixel_x);
+  int abs_y = (pixel_y > player_y) ? (pixel_y - player_y) : (player_y - pixel_y);
+  return (abs_x < abs_y ? abs_y : abs_x) - 1;
+}
+
 void setup() {
 
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -206,10 +245,11 @@ void setup() {
   SerialBT.begin("ESP32_BT_Server"); // Bluetooth name
   Serial.println("Bluetooth SPP started. Ready to pair.");
 
-  initMoving();
-  
-  clearMaze();
   m.dist = 3;
+
+  initMoving();
+  clearMaze();
+  initColors();
 }
 
 
