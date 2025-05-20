@@ -1,13 +1,11 @@
 #include "BluetoothSerial.h"
 #include <stdbool.h>
+
 #include <Adafruit_NeoPixel.h>
 
-#ifdef __AVR__
- #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
-#endif
 
-// Which pin on the Arduino is connected to the NeoPixels?
-#define MATRIX_PIN        13 // On Trinket or Gemma, suggest changing this to 1
+
+#include "ledMatrix.h"
 #define U_PIN             23
 #define D_PIN             22
 #define R_PIN             1
@@ -24,15 +22,13 @@ int moves[4]; //UDRL
 // strandtest example for more information on possible values.
 
 //Matrix init
-#define NUMPIXELS 256
-#define COL_LEN 16
-
-Adafruit_NeoPixel pixels(NUMPIXELS, MATRIX_PIN, NEO_GRB + NEO_KHZ800);
 
 
-const uint wall = pixels.Color(5,5,5);
-const uint target = pixels.Color(5,0,0);
-const uint player = pixels.Color(0,5,0);
+LedMatrix matrix;//inits the led matrix
+
+const uint wall = matrix.generateColor(5,5,5);
+const uint target = matrix.generateColor(5,0,0);
+const uint player = matrix.generateColor(0,5,0);
 
 int target_r = 1;
 int target_g = 0;
@@ -72,18 +68,6 @@ void sendLocations()
 //Matrix funcs
 
 
-int convert(int num)
-{
-  // return (num % 16) * COL_LEN + (((num % 16) % 2 )? (COL_LEN - num / 16 - 1) : num / 16);
-  int x = num % COL_LEN;
-  int y = num / COL_LEN;
-  if(x % 2)
-  {
-    return x * COL_LEN + COL_LEN - y - 1;
-  }
-
-  return x * COL_LEN + y;
-}
 
 void clearMaze() {
   for(int i = 0; i < NUMPIXELS; i++) { 
@@ -127,20 +111,22 @@ void  updateMaze() {
 }
 
 void drawMaze() {
-  pixels.clear();
+  matrix.clearPixels(); // pixels.clear();
   
   for(int i = 0; i < NUMPIXELS; i++) { 
     if(!m.maze[i] && isVisible(i)) {
-      pixels.setPixelColor(convert(i), walls[chooseColor(i)]);
+      matrix.lightPixel(i, walls[chooseColor(i)]); //.pixels.setPixelColor(convert(i), walls[chooseColor(i)]);
     }
   }
   if(isVisible(m.target))
   {
-    pixels.setPixelColor(convert(m.target), targets[chooseColor(m.target)]);
+    matrix.lightPixel(m.target, targets[chooseColor(m.target)]); //.setPixelColor(convert(m.target), targets[chooseColor(m.target)]);
     // pixels.setPixelColor(convert(m.target), walls[chooseColor(i)]);
   }
-  pixels.setPixelColor(convert(m.player), player);
-  pixels.show(); 
+
+  matrix.lightPixel(m.player, player); //pixels.setPixelColor(convert(m.player), player);
+  matrix.show();
+  // pixels.show(); 
 }
 
 
@@ -216,14 +202,14 @@ int calcColor(int c, int i)
 void initColors()
 {
 
-  walls = (uint*)malloc((m.dist)*sizeof(pixels.Color(0,0,0)));
-  targets = (uint*)malloc((m.dist)*sizeof(pixels.Color(0,0,0)));
+  walls = (uint*)malloc((m.dist)*sizeof(uint32_t));
+  targets = (uint*)malloc((m.dist)*sizeof(uint32_t));
 
   for(int i = 0; i < m.dist; i++)
   {
     
-    walls[i] = pixels.Color(calcColor(wall_r, i), calcColor(wall_g, i), calcColor(wall_b, i));
-    targets[i] = pixels.Color(calcColor(target_r, i), calcColor(target_g, i), calcColor(target_b, i));
+    walls[i] = matrix.generateColor(calcColor(wall_r, i), calcColor(wall_g, i), calcColor(wall_b, i));
+    targets[i] = matrix.generateColor(calcColor(target_r, i), calcColor(target_g, i), calcColor(target_b, i));
   }
 }
 
@@ -242,16 +228,12 @@ void setup() {
 
   // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
   // Any other board, you can remove this part (but no harm leaving it):
-#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-#endif
+
   // END of Trinket-specific code.
 
-  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
   Serial.begin(115200);              // USB serial monitor
   SerialBT.begin("ESP32_BT_Server"); // Bluetooth name
-  Serial.println("Bluetooth SPP started. Ready to pair.");
-
+  
   m.dist = 3;
 
   initMoving();
