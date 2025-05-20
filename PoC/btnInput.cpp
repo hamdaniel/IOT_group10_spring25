@@ -6,16 +6,14 @@ UDRLInput::UDRLInput()
   buttonPins[1] = D_PIN;
   buttonPins[2] = R_PIN;
   buttonPins[3] = L_PIN;
-}
 
-void UDRLInput::initInput()
-{
   for (int i = 0; i < 4; i++)
   {
     prevButtonState[i] = HIGH;
     pinMode(buttonPins[i], INPUT_PULLUP); 
   }
 }
+
 
 void UDRLInput::readInput()
 {

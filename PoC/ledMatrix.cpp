@@ -5,15 +5,13 @@ LedMatrix::LedMatrix() : pixels(NUMPIXELS, MATRIX_PIN, NEO_GRB + NEO_KHZ800)
 #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
   clock_prescale_set(clock_div_1);
 #endif
-	
-}
-
-void LedMatrix::initMatrix()
-{
   pixels.begin();
   pixels.clear();
   pixels.show();
+
+	text_color = generateColor(10,5,0);
 }
+
 int LedMatrix::convertIdx(int idx)
 {
   // return (num % 16) * COL_LEN + (((num % 16) % 2 )? (COL_LEN - num / 16 - 1) : num / 16);
@@ -50,7 +48,7 @@ void LedMatrix::winAnimation()
   const int centerX = (NUMPIXELS / COL_LEN) / 2;
   const int centerY = COL_LEN / 2;
   const int steps = COL_LEN;  // number of animation steps (waves)
-  const int reps = 3;
+  const int reps = 30;
 
   for(int i = 0; i < reps; i ++)
   {
@@ -77,7 +75,7 @@ void LedMatrix::winAnimation()
         }
       }
       show();
-      delay(80);
+      delay(1);
     }
     
     // Fade out
@@ -97,13 +95,67 @@ void LedMatrix::winAnimation()
         }
       }
       show();
-      delay(30);
+      delay(1);
     }
-    delay(500);
+    // delay(500);
   }
 }
 
 uint32_t LedMatrix::generateColor(int r, int g, int b)
 {
   return pixels.Color(r > 255 ? 255 : r, g > 255 ? 255 : g, b > 255 ? 255 : b);
+}
+
+  
+void LedMatrix::idleAnimation()
+{
+  
+  for(int y = 2; y < 13; y++)
+  {
+    if(y == 7)
+    {
+      continue;
+    }
+    for(int x = 1; x < 16; x++)
+    {
+      if(x == 4 || x == 8 || x == 12 || (x >= 8 && y < 7))
+      {
+        continue;
+      }
+      if(x == 2 && (( y >=3 && y <= 6 ) || y == 8 || (y >= 10 && y <= 12)))
+      {
+        continue;
+      }
+      if(x == 6 && ((y >=3 && y <= 5) || y == 9 || (y >= 11 && y <= 12)))
+      {
+        continue;
+      }
+      if(x == 9 && ((y >=9 && y <= 10)))
+      {
+        continue;
+      }
+      if(x == 10 && (y == 9 || y == 11) )
+      {
+        continue;
+      }
+      if(x == 11 && ((y >=10 && y <= 11)))
+      {
+        continue;
+      }
+      if(x == 14 && (y == 9 || y == 11) )
+      {
+        continue;
+      }
+      if(x == 15 && (y == 9 || y == 11) )
+      {
+        continue;
+      }
+      lightPixel(x + 16*y, text_color);
+    }
+  }  
+  show();
+  delay(3000);
+  clearPixels();
+  show();
+  delay(2000);
 }

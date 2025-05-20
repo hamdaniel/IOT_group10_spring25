@@ -42,9 +42,6 @@ void setup() {
   
   matrix = new LedMatrix();
   btns = new UDRLInput();
-
-  matrix->initMatrix();
-  btns->initInput();
   
   Serial.println("finished setup");
 }
@@ -63,6 +60,10 @@ void loop() {
       delete maze;
       maze = nullptr;
     }
+  }
+  else
+  {
+    matrix->idleAnimation();
   }
   
 

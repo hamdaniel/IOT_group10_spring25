@@ -16,16 +16,18 @@
 class LedMatrix
 {
 	Adafruit_NeoPixel pixels;
+	uint32_t text_color;
+
 	int convertIdx(int idx);
 	public:
 	LedMatrix();
 	~LedMatrix() = default;
-	void initMatrix();
 	void lightPixel(int idx, uint32_t color);
 	void winAnimation();
 	void clearPixels();
 	void show();
 
+	void idleAnimation();
 	uint32_t generateColor(int r, int g, int b);
 	
 };

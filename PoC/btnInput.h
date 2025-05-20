@@ -18,7 +18,7 @@ class UDRLInput{
 	public:
 	UDRLInput();
 	~UDRLInput() = default;
-	void initInput();
+	
 	void readInput();
 	bool moved(int i);
 };
