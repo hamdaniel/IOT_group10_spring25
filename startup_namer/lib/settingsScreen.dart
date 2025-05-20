@@ -14,35 +14,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late TextEditingController _timeController;
-  late TextEditingController _visionController;
+  late int _time;
+  late int _vision;
 
   @override
   void initState() {
     super.initState();
-    _timeController = TextEditingController(text: widget.initialTime.toString());
-    _visionController = TextEditingController(text: widget.initialVision.toString());
-  }
-
-  @override
-  void dispose() {
-    _timeController.dispose();
-    _visionController.dispose();
-    super.dispose();
+    _time = widget.initialTime.clamp(60, 150);
+    _vision = widget.initialVision.clamp(0, 3);
   }
 
   void _saveSettings() {
-    final int? time = int.tryParse(_timeController.text);
-    final int? vision = int.tryParse(_visionController.text);
-
-    if (time == null || vision == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter valid numbers.")),
-      );
-      return;
-    }
-
-    Navigator.pop(context, {'time': time, 'vision': vision});
+    Navigator.pop(context, {'time': _time, 'vision': _vision});
   }
 
   @override
@@ -54,22 +37,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: _timeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Time To Complete Maze (seconds)",
-                border: OutlineInputBorder(),
-              ),
+            Text("Time To Complete Maze (seconds): $_time"),
+            Slider(
+              value: _time.toDouble(),
+              min: 60,
+              max: 150,
+              divisions: 90,
+              label: _time.toString(),
+              onChanged: (val) {
+                setState(() {
+                  _time = val.round();
+                });
+              },
             ),
             SizedBox(height: 20),
-            TextField(
-              controller: _visionController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Vision At Maze (pixels)",
-                border: OutlineInputBorder(),
-              ),
+            Text("Vision At Maze (level): $_vision"),
+            Slider(
+              value: _vision.toDouble(),
+              min: 0,
+              max: 3,
+              divisions: 3,
+              label: _vision.toString(),
+              onChanged: (val) {
+                setState(() {
+                  _vision = val.round();
+                });
+              },
             ),
             SizedBox(height: 30),
             ElevatedButton(
