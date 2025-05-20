@@ -2,8 +2,8 @@
 #include <TM1637Display.h>
 
 // Module connection pins (Digital Pins)
-#define CLK 25
-#define DIO 26
+#define CLK 19
+#define DIO 18
 
 // The amount of time (in milliseconds) between tests
 #define TEST_DELAY   2000
@@ -73,6 +73,7 @@ void loop()
   delay(TEST_DELAY);
   display.showNumberDec(301, true); // Expect: 0301
   delay(TEST_DELAY);
+  
   display.clear();
   display.showNumberDec(14, false, 2, 1); // Expect: _14_
   delay(TEST_DELAY);
