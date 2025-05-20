@@ -12,6 +12,7 @@
 #define NUMPIXELS 256
 #define COL_LEN 16
 
+
 class LedMatrix
 {
 	Adafruit_NeoPixel pixels;
@@ -21,6 +22,7 @@ class LedMatrix
 	~LedMatrix() = default;
 	void initMatrix();
 	void lightPixel(int idx, uint32_t color);
+	void winAnimation();
 	void clearPixels();
 	void show();
 

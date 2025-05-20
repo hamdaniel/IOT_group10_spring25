@@ -9,7 +9,6 @@
 #include "btnInput.h"
 #include "maze.h"
 
-int moves[4]; //UDRL
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -54,16 +53,16 @@ void setup() {
 void loop() {
   //read from bluetooth
   if (SerialBT.available()) {
-    if(maze != nullptr)
-    {
-      delete maze;
-    }
     String input =  SerialBT.readStringUntil('\n');
     maze = new Maze(matrix, btns, input, 3);
   }
   if(maze != nullptr)
   {
-    maze->play();
+    if(maze->play()) //finished
+    {
+      delete maze;
+      maze = nullptr;
+    }
   }
   
 
