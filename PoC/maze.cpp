@@ -175,7 +175,7 @@ bool Maze::play()
   movePlayer();
   if(player_pos == target_pos)//win condition
   {
-    led_matrix->winAnimation();
+    led_matrix->startWinAnimation();
     return true;
   }
   //draw the maze

@@ -62,8 +62,8 @@ void loop() {
   }
   else
   {
-    matrix->idleAnimation();
+    matrix->startIdleAnimation();
   }
-  
+  matrix->updateAnimation();
 
 }

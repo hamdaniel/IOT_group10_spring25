@@ -18,12 +18,39 @@ class LedMatrix
 	Adafruit_NeoPixel pixels;
 	uint32_t text_color;
 
+	struct WinAnimationState {
+		bool active = false;
+		int phase = 0;             // 0 = wave, 1 = fade, 2 = pause
+		int repCount = 0;
+		int waveRadius = 0;
+		int fadeLevel = 255;
+		unsigned long lastUpdate = 0;
+	};
+
+	struct IdleAnimationState {
+		bool active = false;
+		int phase = 0; // 0 = display, 1 = clear
+		unsigned long lastUpdate = 0;
+	};
+
 	int convertIdx(int idx);
+
+	WinAnimationState win_anim;
+	void updateWinAnimation();    
+
+	IdleAnimationState idle_anim;
+	void updateIdleAnimation();
+	
 	public:
 	LedMatrix();
 	~LedMatrix() = default;
 	void lightPixel(int idx, uint32_t color);
-	void winAnimation();
+
+	void startWinAnimation();     
+	void startIdleAnimation();
+
+	void updateAnimation();
+
 	void clearPixels();
 	void show();
 
