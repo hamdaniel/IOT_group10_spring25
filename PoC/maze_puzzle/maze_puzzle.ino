@@ -34,13 +34,13 @@ const uint wall = pixels.Color(5,5,5);
 const uint target = pixels.Color(5,0,0);
 const uint player = pixels.Color(0,5,0);
 
-int target_r = 15;
+int target_r = 1;
 int target_g = 0;
 int target_b = 0;
 
-int wall_r = 7;
-int wall_g = 7;
-int wall_b = 7;
+int wall_r = 1;
+int wall_g = 1;
+int wall_b = 1;
 
 
 uint* targets;
@@ -137,6 +137,7 @@ void drawMaze() {
   if(isVisible(m.target))
   {
     pixels.setPixelColor(convert(m.target), targets[chooseColor(m.target)]);
+    // pixels.setPixelColor(convert(m.target), walls[chooseColor(i)]);
   }
   pixels.setPixelColor(convert(m.player), player);
   pixels.show(); 
@@ -207,16 +208,22 @@ bool isVisible(int pixel)
   
 }
 
+int calcColor(int c, int i)
+{
+  return (c * ((m.dist + 1 - i) << (m.dist + 1 - i)) > 255) ? 255 : c * ((m.dist + 1 - i) << (m.dist + 1 - i));
+}
+
 void initColors()
 {
 
-  targets = (uint*)malloc(3*sizeof(pixels.Color(0,0,0)));
-  walls = (uint*)malloc(3*sizeof(pixels.Color(0,0,0)));
+  walls = (uint*)malloc((m.dist)*sizeof(pixels.Color(0,0,0)));
+  targets = (uint*)malloc((m.dist)*sizeof(pixels.Color(0,0,0)));
 
   for(int i = 0; i < m.dist; i++)
   {
-    targets[i] = pixels.Color(target_r * (m.dist + 1 - i), target_g * (m.dist + 1 - i), target_b * (m.dist + 1 - i));
-    walls[i] = pixels.Color(wall_r * (m.dist + 1 - i), wall_g * (m.dist + 1 - i), wall_b * (m.dist + 1 - i));
+    
+    walls[i] = pixels.Color(calcColor(wall_r, i), calcColor(wall_g, i), calcColor(wall_b, i));
+    targets[i] = pixels.Color(calcColor(target_r, i), calcColor(target_g, i), calcColor(target_b, i));
   }
 }
 
