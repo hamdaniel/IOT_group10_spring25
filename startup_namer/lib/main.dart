@@ -2,103 +2,275 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
+import 'settingsScreen.dart';
+import 'dart:math';
+import 'Maze.dart';
+import 'dart:collection';
 
-void main() => runApp(MyApp());
+List<List<int>>? lastMaze; // Add this to your _MyAppState class
+
+void main() => runApp(MaterialApp(home: MyApp()));
 
 class MyApp extends StatefulWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
   BluetoothConnection? connection;
-  String status = "Disconnected";
+  String status = "Not connected";
+  late BuildContext menuContext;
 
-  @override
-  void initState() {
-    super.initState();
-    _connectToESP32();
-  }
-void _connectToESP32() async {
-  // Ask for Bluetooth and location permissions
-  await [
-    Permission.bluetooth,
-    Permission.bluetoothConnect,
-    Permission.bluetoothScan,
-    Permission.location,
-  ].request();
+  int timeToCompleteMaze = 5; // minutes
+  int visionAtMaze = 10; // pixels
 
-  // Check if we have permission
-  if (!await Permission.bluetoothConnect.isGranted) {
+  // Removed initState and auto-connect
+
+  void _connectToESP32() async {
     setState(() {
-      status = "Bluetooth connect permission not granted.";
+      status = "Connecting...";
     });
-    return;
-  }
 
-  // Now try getting bonded devices
-  try {
-    List<BluetoothDevice> devices = await FlutterBluetoothSerial.instance.getBondedDevices();
-    BluetoothDevice? esp32;
+    await [
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+      Permission.location,
+    ].request();
 
-    for (var d in devices) {
-      if (d.name != null && d.name!.startsWith("ESP32")) {
-        esp32 = d;
-        break;
-      }
-    }
-
-    if (esp32 != null) {
-      BluetoothConnection.toAddress(esp32.address).then((conn) {
-        connection = conn;
-        setState(() {
-          status = "Connected to ESP32!";
-        });
-
-        conn.input!.listen((data) {
-          print("Received: ${String.fromCharCodes(data)}");
-        });
-      }).catchError((error) {
-        setState(() {
-          status = "Connection failed: $error";
-        });
-      });
-    } else {
+    if (!await Permission.bluetoothConnect.isGranted) {
       setState(() {
-        status = "ESP32 not found in paired devices.";
+        status = "Bluetooth connect permission not granted.";
+      });
+      return;
+    }
+
+    try {
+      List<BluetoothDevice> devices = await FlutterBluetoothSerial.instance.getBondedDevices();
+      BluetoothDevice? esp32;
+
+      for (var d in devices) {
+        if (d.name != null && d.name!.startsWith("ESP32")) {
+          esp32 = d;
+          break;
+        }
+      }
+
+      if (esp32 != null) {
+        try {
+          BluetoothConnection conn = await BluetoothConnection.toAddress(esp32.address);
+          connection = conn;
+          setState(() {
+            status = "Connected to ESP32!";
+          });
+        } catch (error) {
+          setState(() {
+            status = "Connection failed";
+          });
+        }
+      } else {
+        setState(() {
+          status = "ESP32 not found in paired devices.";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        status = "Connection failed";
       });
     }
-  } catch (e) {
-    setState(() {
-      status = "Failed to get bonded devices: $e";
-    });
   }
-}
-
-
   void _sendMessage(String msg) {
     if (connection != null && connection!.isConnected) {
-      print("Sending: $msg");
       connection!.output.add(Uint8List.fromList(msg.codeUnits));
+    }
+  }
+
+void _startGame() {
+  final int size = 16;
+  final rand = Random();
+
+  // Maze with walls (1) everywhere
+  List<List<int>> maze = List.generate(size, (_) => List.generate(size, (_) => 1));
+
+  // Helper to get a random edge cell (odd coordinates for best maze structure)
+  List<Point<int>> edgeCells = [];
+  for (int i = 1; i < size; i += 2) {
+    edgeCells.add(Point(i, 0));
+    edgeCells.add(Point(i, size - 1));
+    edgeCells.add(Point(0, i));
+    edgeCells.add(Point(size - 1, i));
+  }
+
+  // Pick random start edge cell
+  Point<int> start = edgeCells[rand.nextInt(edgeCells.length)];
+
+  // Carve maze using DFS from start
+  void carve(int x, int y) {
+    maze[x][y] = 0;
+    var dirs = [
+      [0, 2],
+      [0, -2],
+      [2, 0],
+      [-2, 0],
+    ]..shuffle(rand);
+    for (var d in dirs) {
+      int nx = x + d[0], ny = y + d[1];
+      if (nx > 0 && nx < size && ny > 0 && ny < size && maze[nx][ny] == 1) {
+        maze[x + d[0] ~/ 2][y + d[1] ~/ 2] = 0; // Remove wall between
+        carve(nx, ny);
+      }
+    }
+  }
+
+  carve(start.x, start.y);
+
+  // Find the farthest reachable edge cell from start
+  Point<int> end = start;
+  int maxDist = -1;
+  List<List<int>> dist = List.generate(size, (_) => List.filled(size, -1));
+  Queue<Point<int>> queue = Queue();
+  queue.add(start);
+  dist[start.x][start.y] = 0;
+
+  while (queue.isNotEmpty) {
+    Point<int> p = queue.removeFirst();
+    for (var d in [
+      Point(0, 1),
+      Point(1, 0),
+      Point(0, -1),
+      Point(-1, 0),
+    ]) {
+      int nx = p.x + d.x, ny = p.y + d.y;
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size &&
+          maze[nx][ny] == 0 && dist[nx][ny] == -1) {
+        dist[nx][ny] = dist[p.x][p.y] + 1;
+        queue.add(Point(nx, ny));
+        // If this is an edge cell, check if it's the farthest so far
+        if ((nx == 0 || nx == size - 1 || ny == 0 || ny == size - 1) &&
+            dist[nx][ny] > maxDist) {
+          maxDist = dist[nx][ny];
+          end = Point(nx, ny);
+        }
+      }
+    }
+  }
+
+  // Ensure start and end are open
+  maze[start.x][start.y] = 2;
+  maze[end.x][end.y] = 3;
+
+  // Store the maze for display
+  setState(() {
+    lastMaze = maze;
+  });
+
+  // Convert maze to string
+
+String mazeString = maze.expand((row) => row).join();
+
+// Send maze string (just 0s and 1s, no prefix, no newline)
+_sendMessage("${mazeString}\n");
+
+  // Show the maze in a dialog
+  showDialog(
+    context: menuContext,
+    builder: (context) => AlertDialog(
+      title: Text('Maze (Start: [${start.x},${start.y}], End: [${end.x},${end.y}])'),
+      content: MazeWidget(maze: maze, start: start, end: end),
+      actions: [
+        TextButton(
+          child: Text('Close'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    ),
+  );
+}
+
+  void _openSettings() async {
+    final result = await Navigator.push(
+      menuContext,
+      MaterialPageRoute(
+        builder: (context) => SettingsScreen(
+          initialTime: timeToCompleteMaze,
+          initialVision: visionAtMaze,
+        ),
+      ),
+    );
+    if (result != null && result is Map<String, int>) {
+      setState(() {
+        timeToCompleteMaze = result['time']!;
+        visionAtMaze = result['vision']!;
+      });
+      // Optionally send settings to ESP32:
+      // _sendMessage("SETTINGS:$timeToCompleteMaze,$visionAtMaze\n");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text("ESP32 Bluetooth")),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(status),
-              ElevatedButton(
-                child: Text("Send Hello"),
-                onPressed: () => _sendMessage("2\n"),
-              ),
-            ],
-          ),
+    return Builder(
+      builder: (BuildContext innerContext) {
+        menuContext = innerContext;
+        return MainMenu(
+          status: status,
+          onConnect: _connectToESP32,
+          onStartGame: _startGame,
+          onChangeSettings: _openSettings,
+          timeToCompleteMaze: timeToCompleteMaze,
+          visionAtMaze: visionAtMaze,
+        );
+      },
+    );
+  }
+}
+
+class MainMenu extends StatelessWidget {
+  final String status;
+  final VoidCallback onConnect;
+  final VoidCallback onStartGame;
+  final VoidCallback onChangeSettings;
+  final int timeToCompleteMaze;
+  final int visionAtMaze;
+
+  const MainMenu({
+    required this.status,
+    required this.onConnect,
+    required this.onStartGame,
+    required this.onChangeSettings,
+    required this.timeToCompleteMaze,
+    required this.visionAtMaze,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("ESP32 Main Menu")),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(status),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text("Connect to ESP32"),
+              onPressed: onConnect,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              child: Text("Start Game"),
+              onPressed: onStartGame,
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              child: Text("Change Settings"),
+              onPressed: onChangeSettings,
+            ),
+            SizedBox(height: 30),
+            Text("Current Settings:"),
+            Text("Time To Complete Maze: $timeToCompleteMaze seconds"),
+            Text("Vision At Maze: $visionAtMaze pixels"),
+          ],
         ),
       ),
     );
