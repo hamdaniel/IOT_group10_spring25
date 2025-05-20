@@ -145,14 +145,19 @@ int Maze::colorIdx(int pixel)
   return (abs_x < abs_y ? abs_y : abs_x) - 1;
 }
 
-void Maze::play()
+bool Maze::play()
 {
   //read input
   btns->readInput();
-
+  
   //move player accordingly
   movePlayer();
-
-  //draw the mazea
+  if(player_pos == target_pos)//win condition
+  {
+    led_matrix->winAnimation();
+    return true;
+  }
+  //draw the maze
   drawMaze();
+  return false;
 }

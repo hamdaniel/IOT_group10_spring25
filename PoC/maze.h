@@ -41,7 +41,7 @@ class Maze {
   Maze(LedMatrix* lm, UDRLInput* bs, const String input, int d = 3);
   ~Maze();
 
-  void play();
+  bool play();//true if over
 
 
 
