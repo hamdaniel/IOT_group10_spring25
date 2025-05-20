@@ -19,6 +19,7 @@ class LedMatrix
 	public:
 	LedMatrix();
 	~LedMatrix() = default;
+	void initMatrix();
 	void lightPixel(int idx, uint32_t color);
 	void clearPixels();
 	void show();

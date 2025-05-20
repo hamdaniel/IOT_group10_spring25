@@ -1,0 +1,26 @@
+#ifndef INPUT_H
+#define INPUT_H
+
+#include <stdbool.h>
+#include <Arduino.h>
+
+#define U_PIN             23
+#define D_PIN             22
+#define R_PIN             1
+#define L_PIN             3
+
+
+class UDRLInput{
+	bool prevButtonState[4]; //UDRL
+	bool currButtonState[4]; //UDRL
+	int buttonPins[4]; //UDRL
+
+	public:
+	UDRLInput();
+	~UDRLInput() = default;
+	void initInput();
+	void readInput();
+	bool moved(int i);
+};
+
+#endif //INPUT_H
