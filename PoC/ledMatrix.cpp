@@ -48,7 +48,7 @@ void LedMatrix::winAnimation()
   const int centerX = (NUMPIXELS / COL_LEN) / 2;
   const int centerY = COL_LEN / 2;
   const int steps = COL_LEN;  // number of animation steps (waves)
-  const int reps = 30;
+  const int reps = 3;
 
   for(int i = 0; i < reps; i ++)
   {
@@ -67,15 +67,15 @@ void LedMatrix::winAnimation()
           if (dist == r)
           {
             // Simple hue-like color variation using the radius
-            int red = (r * 20) % 256;
-            int green = (255 - r * 10) % 256;
-            int blue = (r * 40) % 256;
+            int red = ((r * 20) % 256) / 20;
+            int green = ((255 - r * 10) % 256) / 20;
+            int blue = ((r * 40) % 256) / 20;
             lightPixel(y * 16 + x, generateColor(red, green, blue));
           }
         }
       }
       show();
-      delay(1);
+      delay(30);
     }
     
     // Fade out
@@ -95,9 +95,9 @@ void LedMatrix::winAnimation()
         }
       }
       show();
-      delay(1);
+      delay(50);
     }
-    // delay(500);
+     delay(500);
   }
 }
 
@@ -157,5 +157,5 @@ void LedMatrix::idleAnimation()
   delay(3000);
   clearPixels();
   show();
-  delay(2000);
+  delay(1000);
 }

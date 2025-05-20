@@ -6,6 +6,8 @@
 #include <Arduino.h>
 #include "ledMatrix.h"
 #include "btnInput.h"
+#include "BluetoothSerial.h"
+#include <stdlib.h> 
 
 #define ROW_LEN 16
 #define COL_LEN 16
@@ -27,6 +29,7 @@ class Maze {
 
   LedMatrix* led_matrix;
   UDRLInput* btns;
+  BluetoothSerial* serialBT;
 
 
   void drawMaze();
@@ -38,7 +41,7 @@ class Maze {
 
 
   public:
-  Maze(LedMatrix* lm, UDRLInput* bs, const String input, int d = 3);
+  Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input, String d);
   ~Maze();
 
   bool play();//true if over
