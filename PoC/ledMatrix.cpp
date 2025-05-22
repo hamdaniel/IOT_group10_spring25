@@ -39,102 +39,16 @@ void LedMatrix::lightPixel(int idx, uint32_t color)
 void LedMatrix::clearPixels()
 {
 	pixels.clear();
+  pixels.show();
 }
 
 void LedMatrix::show()
 {
   pixels.show();
 }
-
-void LedMatrix::startWinAnimation() {
-  if(win_anim.active)
-  {
-    return;
-  }
-  win_anim = WinAnimationState(); // Reset all animation parameters
-  win_anim.active = true;
-  clearPixels();
-  show();
-}
-
-void LedMatrix::updateWinAnimation() {
-  if (!win_anim.active) return;
-
-  const int centerX = (NUMPIXELS / COL_LEN) / 2;
-  const int centerY = COL_LEN / 2;
-  const int steps = COL_LEN;
-  const int reps = 3;
-
-  unsigned long now = millis();
-
-  // Wave expansion
-  if (win_anim.phase == 0 && now - win_anim.lastUpdate >= 30) {
-    for (int y = 0; y < 16; y++) {
-      for (int x = 0; x < 16; x++) {
-        int dx = x - centerX;
-        int dy = y - centerY;
-        int dist = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
-
-        if (dist == win_anim.waveRadius) {
-          int red = ((win_anim.waveRadius * 20) % 256) / 20;
-          int green = ((255 - win_anim.waveRadius * 10) % 256) / 20;
-          int blue = ((win_anim.waveRadius * 40) % 256) / 20;
-          lightPixel(y * 16 + x, generateColor(red, green, blue));
-        }
-      }
-    }
-    show();
-    win_anim.waveRadius++;
-    win_anim.lastUpdate = now;
-
-    if (win_anim.waveRadius >= steps) {
-      win_anim.phase = 1;
-      win_anim.fadeLevel = 255;
-    }
-  }
-
-  // Fade out
-  else if (win_anim.phase == 1 && now - win_anim.lastUpdate >= 50) {
-    for (int y = 0; y < 16; y++) {
-      for (int x = 0; x < 16; x++) {
-        int idx = y * 16 + x;
-        uint32_t color = pixels.getPixelColor(convertIdx(idx));
-        uint8_t r = (color >> 16) & 0xFF;
-        uint8_t g = (color >> 8) & 0xFF;
-        uint8_t b = color & 0xFF;
-
-        lightPixel(idx, generateColor((r * win_anim.fadeLevel) / 255, (g * win_anim.fadeLevel) / 255, (b * win_anim.fadeLevel) / 255));
-      }
-    }
-    show();
-    win_anim.fadeLevel -= 25;
-    win_anim.lastUpdate = now;
-
-    if (win_anim.fadeLevel <= 0) {
-      win_anim.phase = 2;
-      win_anim.lastUpdate = now;
-    }
-  }
-
-  // Pause between repetitions
-  else if (win_anim.phase == 2 && now - win_anim.lastUpdate >= 500) {
-    win_anim.repCount++;
-    if (win_anim.repCount >= reps) {
-      win_anim.active = false;
-    } else {
-      clearPixels();
-      show();
-      win_anim.waveRadius = 0;
-      win_anim.phase = 0;
-      win_anim.lastUpdate = now;
-    }
-  }
-}
-
-
-  
+ 
 void LedMatrix::startIdleAnimation() {
-  if(idle_anim.active || win_anim.active)
+  if(idle_anim.active)
   {
     return;
   }
@@ -174,7 +88,6 @@ void LedMatrix::updateIdleAnimation() {
   // Phase 1: Wait and clear
   else if (idle_anim.phase == 1 && now - idle_anim.lastUpdate >= 3000) {
     clearPixels();
-    show();
     idle_anim.phase = 2;
     idle_anim.lastUpdate = now;
   }
@@ -185,15 +98,4 @@ void LedMatrix::updateIdleAnimation() {
   }
 }
 
-void LedMatrix::updateAnimation()
-{
-  if(win_anim.active)
-  {
-    updateWinAnimation();
-  }
-  else if(idle_anim.active)
-  {
-    updateIdleAnimation(); 
-  }
   
-}

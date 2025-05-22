@@ -1,12 +1,16 @@
 #include "maze.h"
 
-const int target_r = 1;
+const int target_r = 0;
 const int target_g = 0;
-const int target_b = 0;
+const int target_b = 1;
 
 const int wall_r = 1;
 const int wall_g = 1;
 const int wall_b = 1;
+
+const int game_over_wall_r = 10;
+const int game_over_wall_g = 0;
+const int game_over_wall_b = 0;
 
 const int player_r = 0;
 const int player_g = 10;
@@ -56,19 +60,12 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input
   }
 
   //init color arrays
-  if(dist > 0)
-  {
-    wall_colors = new uint32_t[dist];
-    target_colors = new uint32_t[dist];
-  }
-  else
-  {
-    wall_colors = nullptr;
-    target_colors = nullptr;
-  }
+  wall_colors = new uint32_t[max(dist,1)];
+  target_colors = new uint32_t[max(dist,1)];
   
   player_color = led_matrix->generateColor(player_r, player_g, player_b);
-  for(int i = 0; i < dist; i++)
+  game_over_wall_color = led_matrix->generateColor(game_over_wall_r, game_over_wall_g, game_over_wall_b);
+  for(int i = 0; i < max(dist,1); i++)
   {
     wall_colors[i] = led_matrix->generateColor(calcRGBVal(wall_r, i), calcRGBVal(wall_g, i), calcRGBVal(wall_b, i));
     target_colors[i] = led_matrix->generateColor(calcRGBVal(target_r, i), calcRGBVal(target_g, i), calcRGBVal(target_b, i));
@@ -79,11 +76,10 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input
 
 Maze::~Maze()
 {
-  if(dist > 0)
-  {
-    delete wall_colors;
-    delete target_colors;
-  }
+  delete wall_colors;
+  delete target_colors;
+  
+  led_matrix->clearPixels();
 }
 
 void Maze::drawMaze() {
@@ -103,10 +99,6 @@ void Maze::drawMaze() {
   led_matrix->show();
   
 }
-
-
-
-
 
 bool Maze::isValid(int new_loc)
 {
@@ -143,8 +135,8 @@ bool Maze::isVisible(int pixel)
   int pixel_y = pixel / COL_LEN;
   int player_x = player_pos % COL_LEN;
   int player_y = player_pos / COL_LEN;
-  int abs_x = (pixel_x > player_x) ? (pixel_x - player_x) : (player_x - pixel_x);
-  int abs_y = (pixel_y > player_y) ? (pixel_y - player_y) : (player_y - pixel_y);
+  int abs_x = max(pixel_x - player_x, player_x - pixel_x);
+  int abs_y = max(pixel_y - player_y, player_y - pixel_y);
 
   return (abs_x <= dist && abs_y <= dist);
   
@@ -152,7 +144,7 @@ bool Maze::isVisible(int pixel)
 
 int Maze::calcRGBVal(int c, int i)
 {
-  return (c * ((dist + 1 - i) << (dist + 1 - i)) > 255) ? 255 : c * ((dist + 1 - i) << (dist + 1 - i));
+  return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
 }
 
 int Maze::colorIdx(int pixel)
@@ -161,24 +153,69 @@ int Maze::colorIdx(int pixel)
   int pixel_y = pixel / COL_LEN;
   int player_x = player_pos % COL_LEN;
   int player_y = player_pos / COL_LEN;
-  int abs_x = (pixel_x > player_x) ? (pixel_x - player_x) : (player_x - pixel_x);
-  int abs_y = (pixel_y > player_y) ? (pixel_y - player_y) : (player_y - pixel_y);
-  return (abs_x < abs_y ? abs_y : abs_x) - 1;
+  int abs_x = max(pixel_x - player_x, player_x - pixel_x);
+  int abs_y = max(pixel_y - player_y, player_y - pixel_y);
+
+  return max(abs_x, abs_y) - 1;
 }
 
-bool Maze::play()
+void Maze::startEndAnimation(bool won_game)
 {
+  if(maze_ended)//already started end animation
+  {
+    return;
+  }
+
+  maze_ended = true;
+  maze_end_time = millis();
+
+  uint32_t color = won_game ? wall_colors[0] : game_over_wall_color;
+
+  for(int i = 0; i < ROW_LEN * COL_LEN; i++)
+  {
+    if(!board[i])
+    {
+      led_matrix->lightPixel(i, color);
+    }
+  }
+
+  led_matrix->lightPixel(target_pos,target_colors[0]);
+  led_matrix->lightPixel(player_pos, player_color);
+  led_matrix->show();
+  
+
+}
+
+
+Maze::maze_status Maze::play(bool timer_over)
+{
+  unsigned long now = millis();
+  if(maze_ended && now - maze_end_time > END_ANIMATION_LENGTH) //game ended and enough time passed, can return true and delete maze
+  {
+    led_matrix->clearPixels();//remove maze from matrix
+    return can_delete;
+  }
+
+  if(timer_over) //time is up
+  {
+    startEndAnimation(false);
+    return displaying_l_anim;
+  }
+
+  if(player_pos == target_pos) //finisehd maze
+  {
+    startEndAnimation(true);
+    return displaying_w_anim;
+  }
+  
+  //if got here maze is not over and time is not up, get input and move player
+
   //read input
   btns->readInput();
   
   //move player accordingly
   movePlayer();
-  if(player_pos == target_pos)//win condition
-  {
-    led_matrix->startWinAnimation();
-    return true;
-  }
   //draw the maze
   drawMaze();
-  return false;
+  return ongoing;
 }

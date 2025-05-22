@@ -11,6 +11,7 @@
 
 #define ROW_LEN 16
 #define COL_LEN 16
+#define END_ANIMATION_LENGTH 6000
 
 class Maze {
 
@@ -19,11 +20,16 @@ class Maze {
 
   uint32_t* wall_colors;
   uint32_t* target_colors;
+
+  uint32_t game_over_wall_color;
   uint32_t player_color;
 
   int player_pos;
   int target_pos;
   int dist;
+
+  unsigned long maze_end_time;
+  bool maze_ended;
 
 
 
@@ -39,12 +45,18 @@ class Maze {
   int calcRGBVal(int c, int i);
   int colorIdx(int pixel);
 
+  void startEndAnimation(bool won_game);
+
+  
+  
 
   public:
+
+  enum maze_status {ongoing, displaying_w_anim, displaying_l_anim, can_delete};
   Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input, String d);
   ~Maze();
 
-  bool play();//true if over
+  maze_status play(bool is_over);//true if over
 
 
 
