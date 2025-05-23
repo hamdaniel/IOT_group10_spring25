@@ -1,6 +1,6 @@
 #include "maze.h"
 
-const int target_r = 0;
+const int target_r = 1;
 const int target_g = 0;
 const int target_b = 1;
 
@@ -16,12 +16,13 @@ const int player_r = 0;
 const int player_g = 10;
 const int player_b = 0;
 
-Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input, String d)
+Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, Mp3Player* mp3, String input, String d)
 {
 
 	led_matrix = lm;
 	btns = bs;
   serialBT = bt;
+  mp3_player = mp3;
 	dist = d[0]-'0';
 
 	//init moves array
@@ -168,7 +169,7 @@ void Maze::startEndAnimation(bool won_game)
 
   maze_ended = true;
   maze_end_time = millis();
-
+  mp3_player->playFilename(MAZE_DIR, won_game ? MAZE_WIN : MAZE_LOSS);
   uint32_t color = won_game ? wall_colors[0] : game_over_wall_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)

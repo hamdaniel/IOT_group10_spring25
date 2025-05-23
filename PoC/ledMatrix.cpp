@@ -58,6 +58,11 @@ void LedMatrix::startIdleAnimation() {
   idle_anim.lastUpdate = millis();
 }
 
+void LedMatrix::stopIdleAnimation()
+{
+  idle_anim.active = false;
+}
+
 void LedMatrix::updateIdleAnimation() {
   if (!idle_anim.active) return;
 

@@ -9,6 +9,7 @@
 #include "btnInput.h"
 #include "maze.h"
 #include "Timer.h"
+#include "sound.h"
 
 // When setting up the NeoPixel library, we tell it how many pixels,
 // and which pin to use to send signals. Note that for older NeoPixel
@@ -22,6 +23,7 @@ LedMatrix* matrix = nullptr;
 UDRLInput* btns = nullptr;
 Maze* maze = nullptr;
 Timer* timer = nullptr;
+Mp3Player* mp3 = nullptr;
 
 //BT init
 BluetoothSerial* SerialBT = nullptr;
@@ -38,6 +40,8 @@ void setup() {
   matrix = new LedMatrix();
   btns = new UDRLInput();
   timer = new Timer();
+  mp3 = new Mp3Player();
+  
   Serial.println("finished setup");
 }
 
@@ -50,7 +54,9 @@ void loop() {
     String dist = SerialBT->readStringUntil('\n');
     Serial.print("got dist: ");
     Serial.println(dist);
-    maze = new Maze(matrix, btns, SerialBT, boardStr, dist);
+    maze = new Maze(matrix, btns, SerialBT, mp3, boardStr, dist);
+
+    matrix->stopIdleAnimation();
     timer->start(time);
   }
 

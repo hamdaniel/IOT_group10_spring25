@@ -42,6 +42,7 @@ class LedMatrix
 	void show();
 	
 	void startIdleAnimation();
+	void stopIdleAnimation();
 	void updateIdleAnimation();
 	
 	uint32_t generateColor(int r, int g, int b);
