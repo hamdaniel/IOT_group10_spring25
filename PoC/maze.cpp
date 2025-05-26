@@ -30,7 +30,8 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, Mp3Player* mp3, St
 	move_amounts[1] = ROW_LEN;
   move_amounts[2] = 1;
   move_amounts[3] = -1;
-		
+	
+  maze_ended = false;
 	
 	//init board & positions
 	for (int i = 0; i < ROW_LEN * COL_LEN; i++) {
