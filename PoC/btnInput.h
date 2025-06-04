@@ -6,8 +6,8 @@
 
 #define U_PIN             23
 #define D_PIN             22
-#define R_PIN             1
-#define L_PIN             3
+#define R_PIN             25
+#define L_PIN             33
 
 
 class UDRLInput{

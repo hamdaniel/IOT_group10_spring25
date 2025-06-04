@@ -36,15 +36,13 @@ void setup() {
 void loop() {
 
 
-  set_volume(40);
-  play_filename(2, 1);
+  set_volume(30);
+  play_filename(1, 1);
   delay(3000);
   set_volume(30);
-  play_filename(2, 1);
+  play_filename(1, 2);
   delay(3000);
-  set_volume(25);
-  play_filename(1, 3);
-  delay(3000);
+  set_volume(30);
 }
 
 bool reset_mp3() {

@@ -8,7 +8,7 @@ Timer::Timer() : display(CLK, DIO)
     blinking = false;
     blinkCount = 0;
     blinkState = false;
-    display.setBrightness(0x0f);
+    display.setBrightness(0x0a);
     display.setSegments(blank);
     //display.showNumberDec(secLeft, true);
     

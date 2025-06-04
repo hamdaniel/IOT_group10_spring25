@@ -4,10 +4,12 @@
 
 #include <stdbool.h>
 #include <Arduino.h>
-#include "ledMatrix.h"
-#include "btnInput.h"
 #include "BluetoothSerial.h"
 #include <stdlib.h> 
+
+#include "ledMatrix.h"
+#include "btnInput.h"
+#include "sound.h"
 
 #define ROW_LEN 16
 #define COL_LEN 16
@@ -36,7 +38,7 @@ class Maze {
   LedMatrix* led_matrix;
   UDRLInput* btns;
   BluetoothSerial* serialBT;
-
+  Mp3Player* mp3_player;
 
   void drawMaze();
   bool isValid(int new_loc);
@@ -47,13 +49,10 @@ class Maze {
 
   void startEndAnimation(bool won_game);
 
-  
-  
-
   public:
 
   enum maze_status {ongoing, displaying_w_anim, displaying_l_anim, can_delete};
-  Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, const String input, String d);
+  Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, Mp3Player* mp3, String input, String d);
   ~Maze();
 
   maze_status play(bool is_over);//true if over
