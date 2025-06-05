@@ -146,8 +146,8 @@ void Snake::play() {
         }
         
         Serial.println("Got input from buttons");
-        draw_board(); // Draw the updated board
     }
     btns->readInput(); // Read button inputs
     change_direction(); // Change direction based on button input
+    draw_board(); // Draw the updated board
 }
