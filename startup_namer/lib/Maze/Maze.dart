@@ -34,20 +34,6 @@ class _MazeMainMenuState extends State<MazeMainMenu> {
     }
   }
 
-  void _startGame() {
-    startMazeGame(
-      menuContext: widget.menuContext,
-      connection: widget.connection,
-      timeToCompleteMaze: timeToCompleteMaze,
-      visionAtMaze: visionAtMaze,
-      onMazeGenerated: (maze) {
-        setState(() {
-          lastMaze = maze;
-        });
-      },
-      sendMessage: _sendMessage,
-    );
-  }
 
   void _openSettings() {
     openMazeSettings(
@@ -64,6 +50,7 @@ class _MazeMainMenuState extends State<MazeMainMenu> {
   }
 
   @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Maze")),
@@ -73,8 +60,10 @@ class _MazeMainMenuState extends State<MazeMainMenu> {
           children: [
             SizedBox(height: 20),
             ElevatedButton(
-              child: Text("Start Game"),
-              onPressed: _startGame,
+              child: Text("Select Game"),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Return true to CustomMenu
+              },
             ),
             SizedBox(height: 10),
             ElevatedButton(
@@ -111,20 +100,16 @@ Future<void> openMazeSettings({
     onSettingsChanged(result['time']!, result['vision']!);
   }
 }
-
 Future<void> startMazeGame({
   required BuildContext menuContext,
   required BluetoothConnection? connection,
   required int timeToCompleteMaze,
   required int visionAtMaze,
-  required void Function(List<List<int>>) onMazeGenerated,
-  required void Function(String) sendMessage,
 }) async {
+  // 1. Generate the maze
   final int size = 16;
   final rand = Random();
-
   List<List<int>> maze = List.generate(size, (_) => List.generate(size, (_) => 1));
-
   List<Point<int>> edgeCells = [];
   for (int i = 1; i < size; i += 2) {
     edgeCells.add(Point(i, 0));
@@ -132,9 +117,7 @@ Future<void> startMazeGame({
     edgeCells.add(Point(0, i));
     edgeCells.add(Point(size - 1, i));
   }
-
   Point<int> start = edgeCells[rand.nextInt(edgeCells.length)];
-
   void carve(int x, int y) {
     maze[x][y] = 0;
     var dirs = [
@@ -151,16 +134,15 @@ Future<void> startMazeGame({
       }
     }
   }
-
   carve(start.x, start.y);
 
+  // 2. Find the farthest edge cell as end
   Point<int> end = start;
   int maxDist = -1;
   List<List<int>> dist = List.generate(size, (_) => List.filled(size, -1));
   Queue<Point<int>> queue = Queue();
   queue.add(start);
   dist[start.x][start.y] = 0;
-
   while (queue.isNotEmpty) {
     Point<int> p = queue.removeFirst();
     for (var d in [
@@ -182,27 +164,25 @@ Future<void> startMazeGame({
       }
     }
   }
-
   maze[start.x][start.y] = 2;
   maze[end.x][end.y] = 3;
 
-  onMazeGenerated(maze);
-
+  // 3. Send maze info to ESP32
   String mazeString = maze.expand((row) => row).join();
   String time_send = "${timeToCompleteMaze.toString().padLeft(3, '0')}";
   String vision_send = "${visionAtMaze.toString()}";
+  if (connection != null && connection.isConnected) {
+    connection.output.add(Uint8List.fromList("${mazeString}\n${time_send}\n${vision_send}\n".codeUnits));
+  }
 
-  sendMessage("${mazeString}\n${time_send}\n${vision_send}\n");
-
-  print("Maze sent");
-
-  showDialog(
+  // 4. Show the compass dialog and play the game
+  await showDialog(
     context: menuContext,
     barrierDismissible: false,
     builder: (context) => CompassDialog(
       connection: connection,
-      end: end,
       start: start,
+      end: end,
     ),
   );
 }
