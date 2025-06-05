@@ -62,7 +62,6 @@ void Timer::update()
                 // Stop blinking after five blinks
                 if (blinkCount >= 5) {
                     blinking = false; // Stop blinking
-                    // secLeft = timeToElapse; // Reset countdown
                     display.setSegments(blank);
                     active = false;
                 }
@@ -81,3 +80,4 @@ void Timer::reset()
     active = false;
     display.setSegments(blank);   
 }
+

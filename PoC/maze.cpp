@@ -16,22 +16,20 @@ const int player_r = 0;
 const int player_g = 10;
 const int player_b = 0;
 
-Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, Mp3Player* mp3, String input, String d)
-{
 
-	led_matrix = lm;
-	btns = bs;
-  serialBT = bt;
-  mp3_player = mp3;
-	dist = d[0]-'0';
+int calcRGBVal(int c, int i)
+{
+  return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
+}
+
+Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t); : MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), duration(t * 1000)
+{
 
 	//init moves array
 	move_amounts[0] = -ROW_LEN;
 	move_amounts[1] = ROW_LEN;
   move_amounts[2] = 1;
   move_amounts[3] = -1;
-	
-  maze_ended = false;
 	
 	//init board & positions
 	for (int i = 0; i < ROW_LEN * COL_LEN; i++) {
@@ -78,13 +76,13 @@ Maze::Maze(LedMatrix* lm, UDRLInput* bs, BluetoothSerial* bt, Mp3Player* mp3, St
 
 Maze::~Maze()
 {
-  delete wall_colors;
-  delete target_colors;
+  delete[] wall_colors;
+  delete[] target_colors;
   
   led_matrix->clearPixels();
 }
 
-void Maze::drawMaze() {
+void Maze::draw() {
   led_matrix->clearPixels();
   
   for(int i = 0; i < NUMPIXELS; i++) { 
@@ -120,10 +118,8 @@ void Maze::movePlayer()
       if(isValid(new_loc))
       {
         player_pos = new_loc;
-        String msg = "000";
-        msg[0] += player_pos / 100;
-        msg[1] += (player_pos % 100) / 10;
-        msg[2] += player_pos % 10;
+        char msg[4];
+        sprintf(msg, "%03d", player_pos);
         serialBT->println(msg);
       }
       return;
@@ -144,11 +140,6 @@ bool Maze::isVisible(int pixel)
   
 }
 
-int Maze::calcRGBVal(int c, int i)
-{
-  return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
-}
-
 int Maze::colorIdx(int pixel)
 {
   int pixel_x = pixel % COL_LEN;
@@ -161,17 +152,20 @@ int Maze::colorIdx(int pixel)
   return max(abs_x, abs_y) - 1;
 }
 
-void Maze::startEndAnimation(bool won_game)
+void Maze::endAnimation()
 {
-  if(maze_ended)//already started end animation
+  if(end_anim_start_time != 0) // End animation already started
   {
+    if(canDelete()) // finished end animation, clear board
+    {
+      led_matrix->clearPixels()
+    }
     return;
   }
-
-  maze_ended = true;
-  maze_end_time = millis();
+  
+  end_anim_start_time = millis();
   mp3_player->playFilename(MAZE_DIR, won_game ? MAZE_WIN : MAZE_LOSS);
-  uint32_t color = won_game ? wall_colors[0] : game_over_wall_color;
+  uint32_t color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_wall_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)
   {
@@ -188,36 +182,44 @@ void Maze::startEndAnimation(bool won_game)
 
 }
 
-
-Maze::maze_status Maze::play(bool timer_over)
+void Maze::play()
 {
-  unsigned long now = millis();
-  if(maze_ended && now - maze_end_time > END_ANIMATION_LENGTH) //game ended and enough time passed, can return true and delete maze
-  {
-    led_matrix->clearPixels();//remove maze from matrix
-    return can_delete;
-  }
-
-  if(timer_over) //time is up
-  {
-    startEndAnimation(false);
-    return displaying_l_anim;
-  }
-
-  if(player_pos == target_pos) //finisehd maze
-  {
-    startEndAnimation(true);
-    return displaying_w_anim;
-  }
   
-  //if got here maze is not over and time is not up, get input and move player
+  switch (status)
+  {
+    case Puzzle::puzzle_status::not_finished
+      btns->readInput(); // Update button state
+      movePlayer(); // Move player accordingly
 
-  //read input
-  btns->readInput();
-  
-  //move player accordingly
-  movePlayer();
-  //draw the maze
-  drawMaze();
-  return ongoing;
+      draw(); // Draw the maze
+
+
+      // Check if need to update status
+      unsigned long now = millis(); 
+
+      if(player_pos == target_pos && now - maze_start_time < duration ) // Reached target in time
+      {
+        status = Puzzle::puzzle_status::win;
+        endAnimation();
+      }
+      
+      else if(now - maze_start_time > duration) // Time is up
+      {
+        status = Puzzle::puzzle_status::lose;
+        endAnimation();
+      }
+      break;
+    
+    case Puzzle::puzzle_status::win
+      endAnimation();
+      break;
+
+    case Puzzle::puzzle_status::lose
+      endAnimation();
+      break;
+
+    default:
+      break;
+  }
+
 }
