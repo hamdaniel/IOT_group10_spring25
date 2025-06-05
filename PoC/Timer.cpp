@@ -32,9 +32,8 @@ void Timer::update()
         return;
     }
     unsigned long currentMillis = millis();
-    if(currentMillis - lastUpdateTime >= TEST_DELAY && (lastUpdateTime!=0))
-    {
-        if (!blinking) {
+    //if(currentMillis - lastUpdateTime >= TEST_DELAY && (lastUpdateTime!=0))
+    if (!blinking) {
             // Countdown logic
             if (secLeft >= 0) {
                 display.showNumberDec(secLeft, true);
@@ -68,7 +67,6 @@ void Timer::update()
                 }
             }
         }
-    }
 }
 
 bool Timer::timeIsUp()
