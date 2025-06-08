@@ -29,6 +29,8 @@ class PuzzleBox {
 		// Displays
 		LedMatrix* matrix = nullptr;
 		Timer* timer = nullptr;
+		// LedStrip* strikes_solved = nullptr;
+		// LedStrip* strip = nullptr;
 
 		// Input
 		UDRLInput* btns = nullptr;

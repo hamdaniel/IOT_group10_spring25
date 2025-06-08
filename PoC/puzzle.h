@@ -16,6 +16,7 @@ class Puzzle {
 		BluetoothSerial* serialBT;
 		Mp3Player* mp3_player;
 		puzzle_status status;
+		//LedStrip* led_strip; // All puzzles will have a led strip for displaying progress or attempts/time left
 	
 	public:
 
