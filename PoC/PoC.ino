@@ -22,9 +22,9 @@ void setup() {
 
 void loop() {
   //read from bluetooth
-  if(SerialBT->isAvailable()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
+  if(SerialBT->available()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
   {
-      String msg = SerialBT.readStringUntil('\n');
+      String msg = SerialBT->readStringUntil('\n');
       if (msg.toInt() > 0) { // number -> Start PuzzleBox
         int num_games = msg.toInt();
         pbox->startGame(num_games);

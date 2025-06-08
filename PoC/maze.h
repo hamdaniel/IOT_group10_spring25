@@ -45,6 +45,7 @@ class Maze : public MatrixPuzzle {
       int colorIdx(int pixel);
       void endAnimation() override;
       void draw() override;
+      int calcRGBVal(int c, int i) const;
 
   public:
       Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t);

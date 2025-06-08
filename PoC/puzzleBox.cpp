@@ -43,34 +43,31 @@ void PuzzleBox::startGame(int num_puzzles) {
 bool PuzzleBox::validGameName(String name)
 {
   return (
-  		  msg == "maze" ||
-		  msg == "snake"
+  		  name == "maze" ||
+		  name == "snake"
   		 );
 }
 
 void PuzzleBox::startPuzzle(String name)
 {
-    switch (name)
-	{
-	case "maze":
+	if (name == "maze") {
 		curr_puzzle = createMaze();
-		break;
-	
-	case "snake":
+	}
+	else if (name == "snake") {
 		// curr_puzzle = createSnake();
-		break;
-	default:
-		break;
+	}
+	else {
+		// Handle unknown puzzle name
 	}
 }
 
 
-Maze* PuzzleB::createMaze();
+Maze* PuzzleBox::createMaze()
 {
 	
 	String boardStr = readFromBT();
-	String time = readFromBT();
-	String dist = readFromBT();
+	int time = readFromBT().toInt();
+	int dist = readFromBT().toInt();
 	
 	return new Maze(SerialBT, mp3, matrix, btns, boardStr, dist, time);
 }
@@ -85,16 +82,21 @@ void PuzzleBox::play()
 
 		if(curr_puzzle->canDelete()) // Can delete puzzle
 		{
-			puzzle_status curr_status = curr_puzzle->getStatus();
+			Puzzle::puzzle_status curr_status = curr_puzzle->getStatus();
 			switch (curr_status)
 			{
 				case Puzzle::puzzle_status::win:
+				{
 					puzzles_solved++;
 					break;
+				}
 
 				case Puzzle::puzzle_status::lose:
+				{
 					strikes--;
 					break;
+				}
+
 				default:
 					break;
 			}
@@ -121,7 +123,7 @@ void PuzzleBox::play()
 //Helper Functions
 String PuzzleBox::readFromBT()
 {
-	while(!SerialBT->isAvailable()) // BT buffer is still empty -> block
+	while(!SerialBT->available()) // BT buffer is still empty -> block
 	{
 		;
 	}

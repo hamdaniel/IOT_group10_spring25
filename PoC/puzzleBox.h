@@ -8,8 +8,10 @@
 #include "ledMatrix.h"
 #include "btnInput.h"
 #include "sound.h"
-#include "puzzle.h"  // base class
-#include "maze.h"    // example puzzle type
+#include "Timer.h"
+#include "puzzle.h" 
+#include "matrixPuzzle.h"
+#include "maze.h"    
 
 #define NUM_STRIKES 3
 

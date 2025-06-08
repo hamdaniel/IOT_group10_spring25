@@ -17,12 +17,12 @@ const int player_g = 10;
 const int player_b = 0;
 
 
-int calcRGBVal(int c, int i)
+int Maze::calcRGBVal(int c, int i) const
 {
   return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
 }
 
-Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t); : MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), duration(t * 1000)
+Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) : MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), duration(t * 1000)
 {
 
 	//init moves array
@@ -35,26 +35,34 @@ Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String i
 	for (int i = 0; i < ROW_LEN * COL_LEN; i++) {
     switch (input[i])
     {
-    case '0':
-      board[i] = true;
-      break;
+      case '0':
+      {
+        board[i] = true;
+        break;
+      }
 
-    case '1':
-      board[i] = false;
-      break;
-    
-    case '2':
-      board[i] = true;
-      player_pos = i;
-      break;
-    
-    case '3':
-      board[i] = true;
-      target_pos = i;
-      break;
+      case '1':
+      {
+        board[i] = false;
+        break;
+      }
+      
+      case '2':
+      {
+        board[i] = true;
+        player_pos = i;
+        break;
+      }
+      
+      case '3':
+      {
+        board[i] = true;
+        target_pos = i;
+        break;
+      }
 
-    default:
-      break;
+      default:
+        break;
     }
 
   }
@@ -158,13 +166,13 @@ void Maze::endAnimation()
   {
     if(canDelete()) // finished end animation, clear board
     {
-      led_matrix->clearPixels()
+      led_matrix->clearPixels();
     }
     return;
   }
   
   end_anim_start_time = millis();
-  mp3_player->playFilename(MAZE_DIR, won_game ? MAZE_WIN : MAZE_LOSS);
+  mp3_player->playFilename(MAZE_DIR, status == Puzzle::puzzle_status::win ? MAZE_WIN : MAZE_LOSS);
   uint32_t color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_wall_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)
@@ -187,12 +195,12 @@ void Maze::play()
   
   switch (status)
   {
-    case Puzzle::puzzle_status::not_finished
+    case Puzzle::puzzle_status::not_finished:
+    {
       btns->readInput(); // Update button state
       movePlayer(); // Move player accordingly
 
       draw(); // Draw the maze
-
 
       // Check if need to update status
       unsigned long now = millis(); 
@@ -209,14 +217,19 @@ void Maze::play()
         endAnimation();
       }
       break;
-    
-    case Puzzle::puzzle_status::win
+    }
+          
+    case Puzzle::puzzle_status::win:
+    {
       endAnimation();
       break;
+    }
 
-    case Puzzle::puzzle_status::lose
+    case Puzzle::puzzle_status::lose:
+    {
       endAnimation();
       break;
+    }
 
     default:
       break;

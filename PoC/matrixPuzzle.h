@@ -17,10 +17,9 @@
 
 
 class MatrixPuzzle : public Puzzle {
-	private:
-		unsigned long end_anim_start_time;
-
+	
 	protected:
+		unsigned long end_anim_start_time;
 		LedMatrix* led_matrix;
 
 		virtual void draw() = 0;
@@ -30,7 +29,7 @@ class MatrixPuzzle : public Puzzle {
 		MatrixPuzzle(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* mat) : Puzzle(bt, mp3), led_matrix(mat), end_anim_start_time(0) {};
 		~MatrixPuzzle() override {};
 
-		virtual puzzle_status getStatus() const override { return (canDelete() ? status : Puzzle::puzzle_status:not_finished); };
+		virtual puzzle_status getStatus() const override { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };
 		virtual bool canDelete() const override { return (millis() - end_anim_start_time) > END_ANIMATION_LENGTH; };
 
 };
