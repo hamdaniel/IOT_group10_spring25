@@ -33,8 +33,8 @@ class Maze : public MatrixPuzzle {
       int dist;
 
       // Time
-      unsigned long maze_start_time;
-      unsigned long duration;
+      unsigned long maze_start_time; // In millis
+      unsigned long time; // In millis
 
       //Movement Functions
       bool isValid(int new_loc);

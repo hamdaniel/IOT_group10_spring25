@@ -1,7 +1,7 @@
 #include "puzzleBox.h"
 
 
-// C'tor , D'tor and Init Functions
+// C'tor , D'tor, Start and End Functions
 PuzzleBox::PuzzleBox(BluetoothSerial* bt) : game_started(false), curr_puzzle(nullptr),
 						 puzzle_count(0), puzzles_solved(0), strikes(0), matrix(nullptr), timer(nullptr),
 						 btns(nullptr), mp3(nullptr), SerialBT(bt)
@@ -35,9 +35,20 @@ void PuzzleBox::startGame(int num_puzzles) {
 	strikes = NUM_STRIKES;
 
 	String secs = readFromBT();
-	timer->start(secs);
+	Serial.println("Starting timer with: " + secs);
+	timer->start(secs.toInt());
 }
 
+void PuzzleBox::endGame() {
+	game_started = false;
+	puzzle_count = 0;
+	puzzles_solved = 0;
+	strikes = 0;
+	delete curr_puzzle;
+	curr_puzzle = nullptr;
+	timer->reset();
+	Serial.println("Stopping puzzle box");
+}
 
 // Puzzle Creation Functions
 bool PuzzleBox::validGameName(String name)
@@ -66,16 +77,21 @@ Maze* PuzzleBox::createMaze()
 {
 	
 	String boardStr = readFromBT();
-	int time = readFromBT().toInt();
-	int dist = readFromBT().toInt();
-	
-	return new Maze(SerialBT, mp3, matrix, btns, boardStr, dist, time);
+	String time = readFromBT();
+	String dist = readFromBT();
+	Serial.println("Creating Maze with board: " + boardStr + ", time: " + time + ", distance: " + dist);
+	return new Maze(SerialBT, mp3, matrix, btns, boardStr, dist.toInt(), time.toInt() * 1000);
 }
 
 
 // Main Function
 void PuzzleBox::play()
 {
+	if(!game_started)
+	{
+		return;
+	}
+
 	if(curr_puzzle != nullptr) // There is a puzzle to play, play it
 	{
 		curr_puzzle->play();
@@ -110,11 +126,13 @@ void PuzzleBox::play()
 	if(puzzles_solved == puzzle_count) // Win logic
 	{
 
+		endGame();
 	}
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic
 	{
 
+		endGame();
 	}
 
 }

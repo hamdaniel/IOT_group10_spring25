@@ -19,7 +19,7 @@
 class MatrixPuzzle : public Puzzle {
 	
 	protected:
-		unsigned long end_anim_start_time;
+		unsigned long end_anim_start_time; // In millis
 		LedMatrix* led_matrix;
 
 		virtual void draw() = 0;
@@ -30,7 +30,8 @@ class MatrixPuzzle : public Puzzle {
 		~MatrixPuzzle() override {};
 
 		virtual puzzle_status getStatus() const override { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };
-		virtual bool canDelete() const override { return (millis() - end_anim_start_time) > END_ANIMATION_LENGTH; };
+		virtual bool canDelete() const override { return ((end_anim_start_time != 0) && 
+														  (millis() - end_anim_start_time > END_ANIMATION_LENGTH)); };
 
 };
 

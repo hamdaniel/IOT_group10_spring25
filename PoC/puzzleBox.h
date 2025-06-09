@@ -54,6 +54,7 @@ class PuzzleBox {
 		void startPuzzle(String name);
 		bool validGameName(String name);
 		void startGame(int num_puzzles);
+		void endGame();
 
 		void play();
 };

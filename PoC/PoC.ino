@@ -10,6 +10,14 @@
 PuzzleBox* pbox = nullptr;
 BluetoothSerial* SerialBT = nullptr;
 
+bool isNumber(const String& str) {
+  if (str.length() == 0) return false;
+  for (unsigned int i = 0; i < str.length(); i++) {
+    if (!isDigit(str[i])) return false;
+  }
+  return true;
+}
+
 void setup() {
 
   Serial.begin(115200);              // USB serial monitor
@@ -25,16 +33,18 @@ void loop() {
   if(SerialBT->available()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
   {
       String msg = SerialBT->readStringUntil('\n');
-      if (msg.toInt() > 0) { // number -> Start PuzzleBox
+      if (isNumber(msg) && msg.toInt() > 0) {
         int num_games = msg.toInt();
+        Serial.println("Starting with " + String(num_games) + " games.");
         pbox->startGame(num_games);
-      } 
+      }
 
       else if (msg == "exit") { // "exit" -> End PuzzleBox
-        // Handle exit logic
+        pbox->endGame();
       }
 
       else if (pbox->validGameName(msg)) { // name -> Create New Puzzle
+        Serial.println("Starting puzzle: " + msg);
         pbox->startPuzzle(msg);
       }
       

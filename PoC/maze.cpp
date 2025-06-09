@@ -22,7 +22,8 @@ int Maze::calcRGBVal(int c, int i) const
   return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
 }
 
-Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) : MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), duration(t * 1000)
+Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) :
+      MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), time(t)
 {
 
 	//init moves array
@@ -79,6 +80,7 @@ Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, St
     target_colors[i] = led_matrix->generateColor(calcRGBVal(target_r, i), calcRGBVal(target_g, i), calcRGBVal(target_b, i));
   }
 
+  maze_start_time = millis();
 
 }
 
@@ -192,7 +194,6 @@ void Maze::endAnimation()
 
 void Maze::play()
 {
-  
   switch (status)
   {
     case Puzzle::puzzle_status::not_finished:
@@ -205,13 +206,13 @@ void Maze::play()
       // Check if need to update status
       unsigned long now = millis(); 
 
-      if(player_pos == target_pos && now - maze_start_time < duration ) // Reached target in time
+      if(player_pos == target_pos && now - maze_start_time < time ) // Reached target in time
       {
         status = Puzzle::puzzle_status::win;
         endAnimation();
       }
       
-      else if(now - maze_start_time > duration) // Time is up
+      else if(now - maze_start_time >= time) // Time is up
       {
         status = Puzzle::puzzle_status::lose;
         endAnimation();

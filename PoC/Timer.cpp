@@ -3,6 +3,7 @@
 Timer::Timer() : display(CLK, DIO)
 {
     active = false;
+    startTime = 0;
     lastUpdateTime = 0;
     lastBlinkTime = 0;
     blinking = false;
@@ -18,12 +19,13 @@ Timer::~Timer()
     // Destructor
 }
 
-void Timer::start(String time)
-{
+void Timer::start(int time)
+{   
+    startTime = millis();
     active = true;
     lastUpdateTime = millis();
-    // timeToElapse = (time[2] -'0') +  ((time[1] -'0')  * 10) + ((time[2] -'0') * 100);
-    secLeft = (time[2] -'0') +  ((time[1] -'0')  * 10) + ((time[0] -'0') * 100);
+    timeToElapse = time;
+    secLeft = time;
 }
 void Timer::update()
 {
@@ -72,7 +74,7 @@ void Timer::update()
 
 bool Timer::timeIsUp()
 {
-    return blinking;
+    return startTime != 0 && (millis() - startTime) >= (timeToElapse * 1000);
 }
 
 void Timer::reset()
