@@ -16,6 +16,7 @@ class Timer{
     bool active;
     int timeToElapse;
     int secLeft;
+    unsigned long startTime;
     unsigned long lastUpdateTime;
     unsigned long lastBlinkTime;
     bool blinking;
@@ -29,7 +30,7 @@ class Timer{
     public:
     Timer();
     ~Timer();
-    void start(String time);
+    void start(int time);
     void update();
     void reset();
 
