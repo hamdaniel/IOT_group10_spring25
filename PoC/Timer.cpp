@@ -80,6 +80,12 @@ bool Timer::timeIsUp()
 void Timer::reset()
 {
     active = false;
+    startTime = 0;
+    lastUpdateTime = 0;
+    lastBlinkTime = 0;
+    blinking = false;
+    blinkCount = 0;
+    blinkState = false;
     display.setSegments(blank);   
 }
 
