@@ -11,7 +11,9 @@
 #include "Timer.h"
 #include "puzzle.h" 
 #include "matrixPuzzle.h"
+
 #include "maze.h"    
+#include "Snake.h"
 
 #define NUM_STRIKES 3
 
@@ -43,7 +45,7 @@ class PuzzleBox {
 
 		// Puzzle creators
 		Maze* createMaze();
-		// Snake* createSnake();
+		Snake* createSnake();
 
 		//Helper Functions
 		String readFromBT();

@@ -23,7 +23,7 @@ int Maze::calcRGBVal(int c, int i) const
 }
 
 Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) :
-      MatrixPuzzle(bt, mp3, lm), btns(bs), dist(d), time(t)
+      MatrixPuzzle(bt, mp3, lm, bs),  dist(d), time(t)
 {
 
 	//init moves array
@@ -174,7 +174,7 @@ void Maze::endAnimation()
   }
   
   end_anim_start_time = millis();
-  mp3_player->playFilename(MAZE_DIR, status == Puzzle::puzzle_status::win ? MAZE_WIN : MAZE_LOSS);
+  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
   uint32_t color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_wall_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)

@@ -1,24 +1,21 @@
 #include "Snake.h"
 
-Snake::Snake(LedMatrix* lm, UDRLInput* bs, Mp3Player* mp3) {
+Snake::Snake(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, int s, int m_l) : MatrixPuzzle(bt, mp3, lm, bs), speed(s), max_length(m_l) {
     snake_length = 1;
     snake_pos[0][0] = 8; // Starting position x
     snake_pos[0][1] = 8; // Starting position y
     snake_direction = 2; // Start moving right
-    is_game_over = false;
+    status = Puzzle::puzzle_status::not_finished;
     last_move_time = millis();
 
-    led_matrix = lm;
-    btns = bs;
-    mp3_player = mp3;
-    speed = 400; // Default speed
-    max_length = 64; // Maximum length of the snake
     
     generate_food();
+    send_food();
 }
 
 Snake::~Snake() {
-    // Destructor logic if needed
+    
+    led_matrix->clearPixels();
 }
 
 void Snake::generate_food() {
@@ -27,25 +24,23 @@ void Snake::generate_food() {
 }
 
 void Snake::send_food(){
-    String food_msg = "F";
-    food_msg += food_pos[0];
-    food_msg += ",";
-    food_msg += food_pos[1];
-    SerialBT.println(food_msg);
+    int food = food_pos[1] + ROW_LEN * food_pos[0];
+    char msg[4];
+    sprintf(msg, "%03d", food);
+    serialBT->println(msg);
+    Serial.println("Sending food position: " + String(msg));
 }
 
 bool Snake::check_collision() {
     // Check collision with walls
     if (snake_pos[0][0] < 0 || snake_pos[0][0] >= ROW_LEN ||
         snake_pos[0][1] < 0 || snake_pos[0][1] >= COL_LEN) {
-        is_game_over = true;
         return true; // Collision with wall
     }
     
     // Check collision with itself
     for (int i = 1; i < snake_length; i++) {
         if (snake_pos[0][0] == snake_pos[i][0] && snake_pos[0][1] == snake_pos[i][1]) {
-            is_game_over = true;
             return true; // Collision with itself
         }
     }
@@ -95,7 +90,7 @@ int Snake::calculate_position(int x, int y){
     return x * COL_LEN + y;
 }
 
-void Snake::draw_board(){
+void Snake::draw(){
     led_matrix->clearPixels();
     
     // Draw the snake
@@ -117,37 +112,79 @@ void Snake::draw_board(){
     led_matrix->show();
 }
 
-void Snake::play() {
-    if (is_game_over) {
-        led_matrix->clearPixels();
-        led_matrix->show();
-        return; // Game over, do not continue
-    }
-    
-    unsigned long current_time = millis();
-    
-    // Check if it's time to move the snake
-    if (current_time - last_move_time >= speed) {
-        last_move_time = current_time;
-        update_snake_position(); // Update the snake's position
 
-        if (check_collision()) {
-            mp3_player->playFilename(0, 1); // Play game over sound
-            return; // Stop the game if collision occurs
-        }
-        
-        // Check if the snake has eaten the food
-        if (snake_pos[0][0] == food_pos[0] && snake_pos[0][1] == food_pos[1]) {
-            if (snake_length < max_length) {
-                snake_length++;
-            }
-            generate_food(); // Generate new food position
-            //send_food(); // Send food position to the app
-        }
-        
-        Serial.println("Got input from buttons");
+void Snake::endAnimation()
+{
+  if(end_anim_start_time != 0) // End animation already started
+  {
+    if(canDelete()) // finished end animation, clear board
+    {
+      led_matrix->clearPixels();
     }
-    btns->readInput(); // Read button inputs
-    change_direction(); // Change direction based on button input
-    draw_board(); // Draw the updated board
+    return;
+  }
+  
+  // TODO: add something visual
+
+  end_anim_start_time = millis();
+  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
+}
+
+
+void Snake::play()
+{
+  switch (status)
+    {
+      case Puzzle::puzzle_status::not_finished:
+        {
+          unsigned long current_time = millis();
+        
+          // Check if it's time to move the snake
+          if (current_time - last_move_time >= speed) {
+              last_move_time = current_time;
+              update_snake_position(); // Update the snake's position
+
+              if (check_collision()) {
+                status = Puzzle::puzzle_status::lose;
+                  return; // Stop the game if collision occurs
+              }
+              
+              // Check if the snake has eaten the food
+              if (snake_pos[0][0] == food_pos[0] && snake_pos[0][1] == food_pos[1]) {
+                if (snake_length < max_length) {
+                    snake_length++;
+                    mp3_player->playFilename(SNAKE_SOUND_DIR, EAT_SOUND); // Play eating sound
+                }
+
+                else { // reached max length
+                    status = Puzzle::puzzle_status::win;   
+                }
+                generate_food(); // Generate new food position
+                send_food(); // Send food position to the app
+              }
+              
+            //   Serial.println("Got input from buttons");
+          }
+          btns->readInput(); // Read button inputs
+          change_direction(); // Change direction based on button input
+          draw(); // Draw the updated board
+          break;
+    }
+          
+    case Puzzle::puzzle_status::win:
+    {
+      endAnimation();
+      break;
+    }
+
+    case Puzzle::puzzle_status::lose:
+    {
+      endAnimation();
+      break;
+    }
+
+    default:
+      break;
+  }
+
 }

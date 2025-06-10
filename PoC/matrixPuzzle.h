@@ -11,8 +11,7 @@
 #include "sound.h"
 #include "puzzle.h"
 
-#define ROW_LEN 16
-#define COL_LEN 16
+
 #define END_ANIMATION_LENGTH 6000
 
 
@@ -21,12 +20,13 @@ class MatrixPuzzle : public Puzzle {
 	protected:
 		unsigned long end_anim_start_time; // In millis
 		LedMatrix* led_matrix;
+		UDRLInput* btns;
 
 		virtual void draw() = 0;
 		virtual void endAnimation() = 0;
 
 	public:
-		MatrixPuzzle(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* mat) : Puzzle(bt, mp3), led_matrix(mat), end_anim_start_time(0) {};
+		MatrixPuzzle(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* mat, UDRLInput* bs) : Puzzle(bt, mp3), led_matrix(mat), btns(bs), end_anim_start_time(0) {};
 		~MatrixPuzzle() override {};
 
 		virtual puzzle_status getStatus() const override { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };

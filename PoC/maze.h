@@ -11,6 +11,9 @@
 #include "sound.h"
 #include "matrixPuzzle.h"
 
+#define ROW_LEN 16
+#define COL_LEN 16
+
 class Maze : public MatrixPuzzle {
 
   private:
@@ -18,7 +21,7 @@ class Maze : public MatrixPuzzle {
       bool board[ROW_LEN * COL_LEN];
       int move_amounts[4];
 
-      UDRLInput* btns;
+      
 
       int player_pos;
       int target_pos;

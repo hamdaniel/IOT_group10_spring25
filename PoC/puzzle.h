@@ -7,6 +7,10 @@
 #include <stdlib.h> 
 #include "sound.h"
 
+#define WIN_LOSE_SOUND_DIR 1
+#define WIN_SOUND 1
+#define LOSS_SOUND 2
+
 class Puzzle {
 
 	public:

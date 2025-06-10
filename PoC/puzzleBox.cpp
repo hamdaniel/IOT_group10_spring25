@@ -10,6 +10,8 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt) : game_started(false), curr_puzzle(nul
 	btns = new UDRLInput();
 	timer = new Timer();
 	mp3 = new Mp3Player();
+
+	mp3->setVolume(10);
 }
 
 PuzzleBox::~PuzzleBox()
@@ -65,7 +67,7 @@ void PuzzleBox::startPuzzle(String name)
 		curr_puzzle = createMaze();
 	}
 	else if (name == "snake") {
-		// curr_puzzle = createSnake();
+		curr_puzzle = createSnake();
 	}
 	else {
 		// Handle unknown puzzle name
@@ -83,7 +85,13 @@ Maze* PuzzleBox::createMaze()
 	return new Maze(SerialBT, mp3, matrix, btns, boardStr, dist.toInt(), time.toInt() * 1000);
 }
 
-
+Snake* PuzzleBox::createSnake()
+{
+	String max_len = readFromBT();
+	String speed = readFromBT();
+	Serial.println("Creating Snake with target length: " + max_len + ", speed: " + speed);
+	return new Snake(SerialBT, mp3, matrix, btns, (int)(1000 / speed.toFloat()), max_len.toInt());
+}
 // Main Function
 void PuzzleBox::play()
 {
@@ -104,12 +112,14 @@ void PuzzleBox::play()
 				case Puzzle::puzzle_status::win:
 				{
 					puzzles_solved++;
+					SerialBT->println("game_over_w");
 					break;
 				}
 
 				case Puzzle::puzzle_status::lose:
 				{
 					strikes--;
+					SerialBT->println("game_over_l");
 					break;
 				}
 
@@ -125,13 +135,11 @@ void PuzzleBox::play()
 
 	if(puzzles_solved == puzzle_count) // Win logic
 	{
-
 		endGame();
 	}
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic
 	{
-
 		endGame();
 	}
 
