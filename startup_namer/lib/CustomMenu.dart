@@ -3,7 +3,8 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'Maze/Maze.dart';
 import 'dart:typed_data';
 import 'GameInProgress.dart';
-
+import 'Snake/SnakeSettingsScreen.dart';
+import 'Maze/MazeSettingsScreen.dart';
 class CustomGameMenu extends StatefulWidget {
   final String status;
   final BluetoothConnection? connection;
@@ -18,8 +19,12 @@ class CustomGameMenu extends StatefulWidget {
 }
 
 class _CustomGameMenuState extends State<CustomGameMenu> {
-  // Track selected games in order
   final List<String> selectedGames = [];
+  double _gameTimeMinutes = 0.5;
+  int? mazeTime = 90;
+  int? mazeVision = 1;
+  int? snakeScoreToBeat = 20;
+  double? snakeSpeed = 1.0;
 
   void _onGameTap(String game) async {
     if (selectedGames.contains(game)) {
@@ -30,40 +35,47 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
       return;
     }
 
-    if (game == "maze") {
-      // Only open Maze menu if not selected
-      final result = await _openMazeMenu(context);
-      if (result == true) {
-        setState(() {
-          if (!selectedGames.contains("maze")) {
-            selectedGames.add("maze");
-          }
-        });
+      if (game == "maze") {
+        final result = await Navigator.push<Map<String, int>>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MazeSettingsScreen(),
+          ),
+        );
+        if (result != null) {
+          setState(() {
+            if (!selectedGames.contains("maze")) {
+              selectedGames.add("maze");
+            }
+            mazeTime = result['time'];
+            mazeVision = result['vision'];
+          });
+        }
       }
-      // If result is not true (user pressed back), do not select
-    } else if (game == "snake" || game == "minesweeper") {
-      setState(() {
-        selectedGames.add(game);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${game[0].toUpperCase()}${game.substring(1)} game coming soon!')),
-      );
-    }
-  }
-
-  Future<bool?> _openMazeMenu(BuildContext context) async {
-    // Returns true if "Select Game" was pressed, null/false otherwise
-    return await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MazeMainMenu(
-          status: widget.status,
-          onConnect: () {},
-          connection: widget.connection,
-          menuContext: context,
-        ),
-      ),
-    );
+      else if (game == "snake") {
+        final result = await Navigator.push<Map<String, dynamic>>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SnakeSettingsScreen(),
+          ),
+        );
+        if (result != null) {
+          setState(() {
+            if (!selectedGames.contains("snake")) {
+              selectedGames.add("snake");
+              snakeScoreToBeat = result['scoreToBeat'];
+              snakeSpeed = result['speed'];
+            }
+          });
+        }
+      }else if (game == "minesweeper") {
+        setState(() {
+          selectedGames.add(game);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Minesweeper game coming soon!')),
+        );
+      }
   }
 
   void _startGames() {
@@ -79,20 +91,31 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
       );
       return;
     }
-  widget.connection!.output.add(
-    Uint8List.fromList('${selectedGames.length}\n'.codeUnits),
+    // Send the number of games to ESP32
+    widget.connection!.output.add(
+      Uint8List.fromList('${selectedGames.length}\n'.codeUnits),
     );
+    // Send the game time in seconds
+    int gameTimeSeconds = (_gameTimeMinutes * 60).round();
+    widget.connection!.output.add(
+      Uint8List.fromList('$gameTimeSeconds\n'.codeUnits),
+    );
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => GameSelectionScreen(
-          selectedGames: List<String>.from(selectedGames),
-          connection: widget.connection,
-          // Optionally pass maze/time/vision here
-        ),
+        selectedGames: List<String>.from(selectedGames),
+        connection: widget.connection,
+        mazeTime: mazeTime ?? 90, // fallback to slider value if not set
+        mazeVision: mazeVision ?? 1,           // fallback to 1 if not set
+        snakeScoreToBeat: snakeScoreToBeat ?? 100, // fallback value
+        snakeSpeed: snakeSpeed ?? 1.0,     
+          ),
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final mazeImage = 'assets/maze.png';
@@ -129,6 +152,20 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Game time slider
+            Text("Game time: ${_gameTimeMinutes.toStringAsFixed(1)} min"),
+            Slider(
+              value: _gameTimeMinutes,
+              min: 0.5,
+              max: 10,
+              divisions: 10,
+              label: "${_gameTimeMinutes.toStringAsFixed(1)} min",
+              onChanged: (val) {
+                setState(() {
+                  _gameTimeMinutes = val;
+                });
+              },
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

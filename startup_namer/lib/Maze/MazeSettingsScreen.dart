@@ -1,49 +1,36 @@
 import 'package:flutter/material.dart';
 
 class MazeSettingsScreen extends StatefulWidget {
-  final int initialTime;
-  final int initialVision;
 
-  const MazeSettingsScreen({
-    required this.initialTime,
-    required this.initialVision,
-  });
 
   @override
   State<MazeSettingsScreen> createState() => _MazeSettingsScreenState();
 }
 
 class _MazeSettingsScreenState extends State<MazeSettingsScreen> {
-  late int _time;
-  late int _vision;
+  late int _time = 9; // was 90, changed to 9 for testing
+  late int _vision = 1;
 
   @override
   void initState() {
     super.initState();
-    _time = widget.initialTime.clamp(60, 150);
-    _vision = widget.initialVision.clamp(0, 3);
-  }
-
-  void _saveSettings() {
-    Navigator.pop(context, {'time': _time, 'vision': _vision});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Change Settings")),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      appBar: AppBar(title: Text("Maze Settings")),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Time To Complete Maze (seconds): $_time"),
+            Text("Time to complete maze: $_time seconds"),
             Slider(
               value: _time.toDouble(),
-              min: 60,
-              max: 150,
-              divisions: 90,
-              label: _time.toString(),
+              min: 9,
+              max: 180,
+              divisions: 27,
+              label: "$_time",
               onChanged: (val) {
                 setState(() {
                   _time = val.round();
@@ -51,13 +38,13 @@ class _MazeSettingsScreenState extends State<MazeSettingsScreen> {
               },
             ),
             SizedBox(height: 20),
-            Text("Vision At Maze (level): $_vision"),
+            Text("Vision at maze: $_vision pixels"),
             Slider(
               value: _vision.toDouble(),
-              min: 0,
+              min: 1,
               max: 3,
-              divisions: 3,
-              label: _vision.toString(),
+              divisions: 2,
+              label: "$_vision",
               onChanged: (val) {
                 setState(() {
                   _vision = val.round();
@@ -66,8 +53,13 @@ class _MazeSettingsScreenState extends State<MazeSettingsScreen> {
             ),
             SizedBox(height: 30),
             ElevatedButton(
-              child: Text("Save"),
-              onPressed: _saveSettings,
+              onPressed: () {
+                Navigator.of(context).pop({
+                  'time': _time,
+                  'vision': _vision,
+                });
+              },
+              child: Text("Select Game"),
             ),
           ],
         ),

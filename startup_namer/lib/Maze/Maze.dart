@@ -3,104 +3,9 @@ import 'dart:collection';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'settingsScreen.dart';
-import 'compass.dart';
+import 'MazeCompass.dart';
 
-class MazeMainMenu extends StatefulWidget {
-  final String status;
-  final VoidCallback onConnect;
-  final BluetoothConnection? connection;
-  final BuildContext menuContext;
-
-  const MazeMainMenu({
-    required this.status,
-    required this.onConnect,
-    required this.connection,
-    required this.menuContext,
-  });
-
-  @override
-  State<MazeMainMenu> createState() => _MazeMainMenuState();
-}
-
-class _MazeMainMenuState extends State<MazeMainMenu> {
-  int timeToCompleteMaze = 90;
-  int visionAtMaze = 1;
-  List<List<int>>? lastMaze;
-
-  void _sendMessage(String msg) {
-    if (widget.connection != null && widget.connection!.isConnected) {
-      widget.connection!.output.add(Uint8List.fromList(msg.codeUnits));
-    }
-  }
-
-
-  void _openSettings() {
-    openMazeSettings(
-      menuContext: widget.menuContext,
-      initialTime: timeToCompleteMaze,
-      initialVision: visionAtMaze,
-      onSettingsChanged: (newTime, newVision) {
-        setState(() {
-          timeToCompleteMaze = newTime;
-          visionAtMaze = newVision;
-        });
-      },
-    );
-  }
-
-  @override
-@override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Maze")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 20),
-            ElevatedButton(
-              child: Text("Select Game"),
-              onPressed: () {
-                Navigator.of(context).pop(true); // Return true to CustomMenu
-              },
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              child: Text("Change Settings"),
-              onPressed: _openSettings,
-            ),
-            SizedBox(height: 30),
-            Text("Current Settings:"),
-            Text("Time To Complete Maze: $timeToCompleteMaze seconds"),
-            Text("Vision At Maze: $visionAtMaze pixels"),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Future<void> openMazeSettings({
-  required BuildContext menuContext,
-  required int initialTime,
-  required int initialVision,
-  required void Function(int, int) onSettingsChanged,
-}) async {
-  final result = await Navigator.push(
-    menuContext,
-    MaterialPageRoute(
-      builder: (context) => MazeSettingsScreen(
-        initialTime: initialTime,
-        initialVision: initialVision,
-      ),
-    ),
-  );
-  if (result != null && result is Map<String, int>) {
-    onSettingsChanged(result['time']!, result['vision']!);
-  }
-}
-Future<void> startMazeGame({
+Future<String?> startMazeGame({
   required BuildContext menuContext,
   required BluetoothConnection? connection,
   required int timeToCompleteMaze,
@@ -117,6 +22,7 @@ Future<void> startMazeGame({
     edgeCells.add(Point(0, i));
     edgeCells.add(Point(size - 1, i));
   }
+  connection?.output.add(Uint8List.fromList("maze\n".codeUnits));
   Point<int> start = edgeCells[rand.nextInt(edgeCells.length)];
   void carve(int x, int y) {
     maze[x][y] = 0;
@@ -167,7 +73,7 @@ Future<void> startMazeGame({
   maze[start.x][start.y] = 2;
   maze[end.x][end.y] = 3;
 
-  // 3. Send maze info to ESP32
+
   String mazeString = maze.expand((row) => row).join();
   String time_send = "${timeToCompleteMaze.toString().padLeft(3, '0')}";
   String vision_send = "${visionAtMaze.toString()}";
@@ -175,8 +81,7 @@ Future<void> startMazeGame({
     connection.output.add(Uint8List.fromList("${mazeString}\n${time_send}\n${vision_send}\n".codeUnits));
   }
 
-  // 4. Show the compass dialog and play the game
-  await showDialog(
+  final result = await showDialog<String>(
     context: menuContext,
     barrierDismissible: false,
     builder: (context) => CompassDialog(
@@ -185,4 +90,5 @@ Future<void> startMazeGame({
       end: end,
     ),
   );
+  return result; 
 }

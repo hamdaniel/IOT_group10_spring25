@@ -1,7 +1,11 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+
+// Global broadcast stream for Bluetooth input
+Stream<Uint8List>? globalInputBroadcast;
 
 class CompassDialog extends StatefulWidget {
   final BluetoothConnection? connection;
@@ -21,21 +25,31 @@ class CompassDialog extends StatefulWidget {
 class _CompassDialogState extends State<CompassDialog> {
   late Point<int> player;
   double? angle;
+  StreamSubscription<Uint8List>? _mazeSubscription;
 
   @override
   void initState() {
     super.initState();
-    // Initialize player with start position before first ESP message
     player = widget.start;
     angle = atan2(widget.end.x - player.x, widget.end.y - player.y);
+
+    // Set up the global broadcast stream only once per connection
+    if (widget.connection?.input != null && globalInputBroadcast == null) {
+      globalInputBroadcast = widget.connection!.input!.asBroadcastStream();
+    }
     _listenForPlayer();
   }
 
-  void _listenForPlayer() async {
-      widget.connection?.input?.asBroadcastStream().listen((Uint8List data) {
+  void _listenForPlayer() {
+    _mazeSubscription = globalInputBroadcast?.listen((Uint8List data) {
       String msg = String.fromCharCodes(data).trim();
-      // Expecting a string of length 3, e.g., "220"
-      if (msg.length == 3 && int.tryParse(msg) != null) {
+      if (msg == "game_over_w") {
+        // User won: pop dialog and return "win"
+        Navigator.of(context).pop("win");
+      } else if (msg == "game_over_l") {
+        // User lost: pop dialog and return "lose"
+        Navigator.of(context).pop("lose");
+      } else if (msg.length == 3 && int.tryParse(msg) != null) {
         int value = int.parse(msg);
         int x = value ~/ 16;
         int y = value % 16;
@@ -48,16 +62,38 @@ class _CompassDialogState extends State<CompassDialog> {
   }
 
   @override
+  void dispose() {
+    _mazeSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Compass to End'),
-      content: SizedBox(
-        width: 200,
-        height: 200,
-        child: CustomPaint(
-          painter: CompassPainter(angle ?? 0),
-          child: Container(),
+    return WillPopScope(
+      onWillPop: () async => false, // Disable Android back button
+      child: AlertDialog(
+        title: Text('Compass to End'),
+        content: SizedBox(
+          width: 200,
+          height: 200,
+          child: CustomPaint(
+            painter: CompassPainter(angle ?? 0),
+            child: Container(),
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              // Send "exit" to ESP32
+              if (widget.connection != null && widget.connection!.isConnected) {
+                widget.connection!.output.add(Uint8List.fromList('exit\n'.codeUnits));
+              }
+              // Pop all the way back to the main menu
+              Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+            },
+            child: Text("Quit"),
+          ),
+        ],
       ),
     );
   }

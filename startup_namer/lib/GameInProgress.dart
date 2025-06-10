@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'Maze/Maze.dart';
+import 'Snake/Snake.dart'; 
 
 class GameSelectionScreen extends StatefulWidget {
   final List<String> selectedGames;
@@ -9,7 +10,10 @@ class GameSelectionScreen extends StatefulWidget {
   // You can pass maze settings or other game settings as needed
   final int mazeTime;
   final int mazeVision;
-  final List<List<int>>? maze; // Pass the maze if you want to use a specific one
+  final List<List<int>>? maze;
+  final int snakeScoreToBeat;
+  final double snakeSpeed;
+  
 
   const GameSelectionScreen({
     required this.selectedGames,
@@ -17,6 +21,9 @@ class GameSelectionScreen extends StatefulWidget {
     this.mazeTime = 90,
     this.mazeVision = 1,
     this.maze,
+    this.snakeScoreToBeat=20,
+    this.snakeSpeed=1,
+
   });
 
   @override
@@ -35,13 +42,32 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
 
   Future<void> _startGame(String game) async {
     if (game == "maze") {
-      await startMazeGame(
+      final result = await startMazeGame(
         menuContext: context,
         connection: widget.connection,
         timeToCompleteMaze: widget.mazeTime,
         visionAtMaze: widget.mazeVision,
       );
-    } 
+      setState(() {
+        if (result == "win") {
+          completedGames.add(game); 
+        }
+        
+      });
+    }
+    else if (game == "snake") {
+      final result = await startSnakeGame(
+        menuContext: context,
+        connection: widget.connection,
+        scoreToBeat: widget.snakeScoreToBeat,
+        speed: widget.snakeSpeed,
+      );
+      setState(() {
+        if (result == "win") {
+          completedGames.add(game);
+        }
+      });
+    }
      else {
       await showDialog(
         context: context,
@@ -57,9 +83,6 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
         ),
       );
     }
-    setState(() {
-      completedGames.add(game);
-    });
   }
 
   @override
@@ -90,7 +113,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                       margin: EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: isDone ? Colors.green : Colors.blue,
+                          color: isDone ? Colors.green : Colors.transparent,
                           width: 4,
                         ),
                         borderRadius: BorderRadius.circular(12),
