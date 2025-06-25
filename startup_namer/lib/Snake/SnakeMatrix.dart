@@ -35,11 +35,9 @@ class _SnakeMatrixDialogState extends State<SnakeMatrixDialog> {
       if (msg == "game_over_w") {
         Navigator.of(context).pop("win");
       } else if (msg == "game_over_l") {
-        print("Game over, you lost!");
         Navigator.of(context).pop("lose");
       } else if (msg.length == 3 && int.tryParse(msg) != null) {
         int value = int.parse(msg);
-        print ("Snake position: $value");
         setState(() {
           appleX = value ~/ 16;
           appleY = value % 16;

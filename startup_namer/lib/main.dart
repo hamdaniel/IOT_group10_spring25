@@ -5,7 +5,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'Maze/Maze.dart';
 import 'CustomMenu.dart';
 
-void main() => runApp(MaterialApp(home: MyApp()));
+void main() => runApp(MaterialApp(
+  debugShowCheckedModeBanner: false,
+  theme: ThemeData.dark(),
+  home: MyApp(),
+));
 
 class MyApp extends StatefulWidget {
   @override
@@ -92,37 +96,107 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Main Menu")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => _showPlaceholder("Easy"),
-              child: Text("Easy"),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.videogame_asset, size: 80, color: Colors.amberAccent),
+                SizedBox(height: 20),
+                Text(
+                  "Escape Game",
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amberAccent,
+                    letterSpacing: 2,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.black54,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 40),
+                _buildMenuButton("Easy", Icons.sentiment_satisfied, () => _showPlaceholder("Easy")),
+                SizedBox(height: 20),
+                _buildMenuButton("Medium", Icons.sentiment_neutral, () => _showPlaceholder("Medium")),
+                SizedBox(height: 20),
+                _buildMenuButton("Hard", Icons.sentiment_very_dissatisfied, () => _showPlaceholder("Hard")),
+                SizedBox(height: 20),
+                _buildMenuButton("Custom", Icons.tune, _openCustomMenu),
+                SizedBox(height: 40),
+                Card(
+                  color: Colors.white.withOpacity(0.15),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Bluetooth Status:",
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          status,
+                          style: TextStyle(
+                            color: status == "Connected to ESP32!" ? Colors.greenAccent : Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: _connectToESP32,
+                          icon: Icon(Icons.bluetooth),
+                          label: Text("Connect to ESP32"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            textStyle: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _showPlaceholder("Medium"),
-              child: Text("Medium"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _showPlaceholder("Hard"),
-              child: Text("Hard"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _openCustomMenu,
-              child: Text("Custom"),
-            ),
-            SizedBox(height: 40),
-            Text("Bluetooth Status: $status"),
-            ElevatedButton(
-              onPressed: _connectToESP32,
-              child: Text("Connect to ESP32"),
-            ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton(String text, IconData icon, VoidCallback onPressed) {
+    return SizedBox(
+      width: 220,
+      height: 56,
+      child: ElevatedButton.icon(
+        icon: Icon(icon, size: 28),
+        label: Text(
+          text,
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.purpleAccent,
+          foregroundColor: Colors.white,
+          elevation: 6,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
     );
