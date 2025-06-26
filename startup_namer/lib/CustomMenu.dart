@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'GameInProgress.dart';
 import 'Snake/SnakeSettingsScreen.dart';
 import 'Maze/MazeSettingsScreen.dart';
+import 'Morse/MorseSettingsScreen.dart';
 
 class CustomGameMenu extends StatefulWidget {
   final String status;
@@ -26,6 +27,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
   int? mazeVision = 1;
   int? snakeScoreToBeat = 20;
   double? snakeSpeed = 1.0;
+  int? morseWordLength = 4;
 
   void _onGameTap(String game) async {
     if (selectedGames.contains(game)) {
@@ -74,13 +76,21 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Wires game coming soon!')),
       );
-    } else if (game == "morse") {
-      setState(() {
-        selectedGames.add(game);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Morse Code game coming soon!')),
+        } else if (game == "morse") {
+      final result = await Navigator.push<Map<String, int>>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MorseSettingsScreen(),
+        ),
       );
+      if (result != null) {
+        setState(() {
+          if (!selectedGames.contains("morse")) {
+            selectedGames.add("morse");
+          }
+          morseWordLength = result['wordLength'];
+        });
+      }
     }
   }
 
@@ -115,6 +125,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           mazeVision: mazeVision ?? 1,
           snakeScoreToBeat: snakeScoreToBeat ?? 100,
           snakeSpeed: snakeSpeed ?? 1.0,
+          
         ),
       ),
     );

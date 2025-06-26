@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
-// Global broadcast stream for Bluetooth input
 Stream<Uint8List>? globalInputBroadcast;
 
 class CompassDialog extends StatefulWidget {
@@ -70,30 +69,17 @@ class _CompassDialogState extends State<CompassDialog> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false, // Disable Android back button
+      onWillPop: () async => false,
       child: AlertDialog(
         title: Text('Compass to End'),
         content: SizedBox(
-          width: 200,
-          height: 200,
+          width: 300,
+          height: 300,
           child: CustomPaint(
             painter: CompassPainter(angle ?? 0),
             child: Container(),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              // Send "exit" to ESP32
-              if (widget.connection != null && widget.connection!.isConnected) {
-                widget.connection!.output.add(Uint8List.fromList('exit\n'.codeUnits));
-              }
-              // Pop all the way back to the main menu
-              Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-            },
-            child: Text("Quit"),
-          ),
-        ],
       ),
     );
   }

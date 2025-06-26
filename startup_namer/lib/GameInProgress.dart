@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'Maze/Maze.dart';
-import 'Snake/Snake.dart'; 
+import 'Snake/Snake.dart';
+import 'Morse/Morse.dart';
 
 class GameSelectionScreen extends StatefulWidget {
   final List<String> selectedGames;
   final BluetoothConnection? connection;
-
-  // You can pass maze settings or other game settings as needed
   final int mazeTime;
   final int mazeVision;
   final List<List<int>>? maze;
   final int snakeScoreToBeat;
   final double snakeSpeed;
-  
+  final int morseWordLength;
 
   const GameSelectionScreen({
     required this.selectedGames,
@@ -21,9 +20,9 @@ class GameSelectionScreen extends StatefulWidget {
     this.mazeTime = 90,
     this.mazeVision = 1,
     this.maze,
-    this.snakeScoreToBeat=20,
-    this.snakeSpeed=1,
-
+    this.snakeScoreToBeat = 20,
+    this.snakeSpeed = 1,
+    this.morseWordLength = 4,
   });
 
   @override
@@ -31,14 +30,7 @@ class GameSelectionScreen extends StatefulWidget {
 }
 
 class _GameSelectionScreenState extends State<GameSelectionScreen> {
-  late List<String> remainingGames;
   Set<String> completedGames = {};
-
-  @override
-  void initState() {
-    super.initState();
-    remainingGames = List<String>.from(widget.selectedGames);
-  }
 
   Future<void> _startGame(String game) async {
     if (game == "maze") {
@@ -49,13 +41,9 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
         visionAtMaze: widget.mazeVision,
       );
       setState(() {
-        if (result == "win") {
-          completedGames.add(game); 
-        }
-        
+        if (result == "win") completedGames.add(game);
       });
-    }
-    else if (game == "snake") {
+    } else if (game == "snake") {
       final result = await startSnakeGame(
         menuContext: context,
         connection: widget.connection,
@@ -63,12 +51,18 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
         speed: widget.snakeSpeed,
       );
       setState(() {
-        if (result == "win") {
-          completedGames.add(game);
-        }
+        if (result == "win") completedGames.add(game);
       });
-    }
-     else {
+    } else if (game == "morse") {
+      final result = await startMorseGame(
+        menuContext: context,
+        connection: widget.connection,
+        wordLength: widget.morseWordLength,
+      );
+      setState(() {
+        if (result == "win") completedGames.add(game);
+      });
+    } else {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -90,69 +84,108 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
     final gameImages = {
       "maze": 'assets/maze.png',
       "snake": 'assets/snake.png',
-      "minesweeper": 'assets/minesweeper.png',
+      "wires": 'assets/wires.png',
+      "morse": 'assets/morse.png',
     };
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Play Selected Games")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Tap a game to play it:", style: TextStyle(fontSize: 18)),
-            SizedBox(height: 20),
-            Row(
+    return WillPopScope(
+      onWillPop: () async => false, // Prevents back navigation
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Play Selected Games"),
+          automaticallyImplyLeading: false, // No back arrow
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.selectedGames.map((game) {
-                final isDone = completedGames.contains(game);
-                return GestureDetector(
-                  onTap: isDone ? null : () => _startGame(game),
-                  child: Opacity(
-                    opacity: isDone ? 0.4 : 1.0,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: isDone ? Colors.green : Colors.transparent,
-                          width: 4,
+              children: [
+                Text(
+                  "Tap a game to play it:",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  mainAxisSpacing: 24,
+                  crossAxisSpacing: 24,
+                  childAspectRatio: 0.95,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: widget.selectedGames.map((game) {
+                    final isDone = completedGames.contains(game);
+                    return GestureDetector(
+                      onTap: isDone ? null : () => _startGame(game),
+                      child: Opacity(
+                        opacity: isDone ? 0.4 : 1.0,
+                        child: Container(
+                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: isDone ? Colors.greenAccent.shade400 : Colors.transparent,
+                              width: isDone ? 8 : 4, // Thicker border for completed
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            color: isDone
+                                ? Colors.greenAccent.withOpacity(0.18) // Subtle green background
+                                : Colors.white.withOpacity(0.13),
+                          ),
+                          padding: EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                gameImages[game] ?? '',
+                                width: 90,
+                                height: 90,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "${game[0].toUpperCase()}${game.substring(1)}",
+                                style: TextStyle(
+                                  color: isDone ? Colors.greenAccent.shade400 : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (isDone)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Icon(Icons.check, color: Colors.greenAccent.shade400, size: 28),
+                                ),
+                            ],
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: EdgeInsets.all(4),
-                      child: Column(
-                        children: [
-                          Image.asset(
-                            gameImages[game] ?? '',
-                            width: 100,
-                            height: 100,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "${game[0].toUpperCase()}${game.substring(1)}",
-                            style: TextStyle(
-                              color: isDone ? Colors.green : Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (isDone)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Icon(Icons.check, color: Colors.green),
-                            ),
-                        ],
-                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 40),
+                if (completedGames.length == widget.selectedGames.length)
+                  Text(
+                    "All games completed!",
+                    style: TextStyle(
+                      fontSize: 26,
+                      color: Colors.greenAccent.shade400,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 8,
+                          color: Colors.black54,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              }).toList(),
+              ],
             ),
-            SizedBox(height: 40),
-            if (completedGames.length == widget.selectedGames.length)
-              Text(
-                "All games completed!",
-                style: TextStyle(fontSize: 20, color: Colors.green),
-              ),
-          ],
+          ),
         ),
       ),
     );

@@ -54,28 +54,31 @@ class _SnakeMatrixDialogState extends State<SnakeMatrixDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Snake Game'),
-      content: SizedBox(
-        width: 320,
-        height: 320,
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 16,
+    return WillPopScope(
+      onWillPop: () async => false, // Prevents back navigation
+      child: AlertDialog(
+        title: Text('Snake Game'),
+        content: SizedBox(
+          width: 320,
+          height: 320,
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 16,
+            ),
+            itemCount: 256,
+            itemBuilder: (context, index) {
+              int x = index ~/ 16;
+              int y = index % 16;
+              bool isApple = (x == appleX && y == appleY);
+              return Container(
+                margin: EdgeInsets.all(1),
+                decoration: BoxDecoration(
+                  color: isApple ? Colors.red : Colors.grey[300],
+                  border: Border.all(color: Colors.black12),
+                ),
+              );
+            },
           ),
-          itemCount: 256,
-          itemBuilder: (context, index) {
-            int x = index ~/ 16;
-            int y = index % 16;
-            bool isApple = (x == appleX && y == appleY);
-            return Container(
-              margin: EdgeInsets.all(1),
-              decoration: BoxDecoration(
-                color: isApple ? Colors.red : Colors.grey[300],
-                border: Border.all(color: Colors.black12),
-              ),
-            );
-          },
         ),
       ),
     );
