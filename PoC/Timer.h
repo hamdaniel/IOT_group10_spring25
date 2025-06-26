@@ -12,29 +12,32 @@
 #define TEST_DELAY   1000
 
 class Timer{
-
-    bool active;
-    int timeToElapse;
-    int secLeft;
-    unsigned long startTime;
-    unsigned long lastUpdateTime;
-    unsigned long lastBlinkTime;
-    bool blinking;
-    int blinkCount;
-    bool blinkState;
-
-    TM1637Display display;
-    uint8_t blank[4] = { 0x00, 0x00, 0x00, 0x00 };
+    private:
+        bool active;
+        int timeToElapse;
+        int secLeft;
+        unsigned long startTime;
+        unsigned long lastUpdateTime;
+        unsigned long lastBlinkTime;
+        bool blinking;
+        int blinkCount;
+        bool blinkState;
+        TaskHandle_t taskHandle;
+        TM1637Display display;
+        uint8_t blank[4] = { 0x00, 0x00, 0x00, 0x00 };
 
 
     public:
-    Timer();
-    ~Timer();
-    void start(int time);
-    void update();
-    void reset();
 
-    bool timeIsUp();
+
+        Timer();
+        ~Timer();
+        void start(int time);
+        static void updateWrapper(void* timer_instance);
+        void update();
+        void reset();
+
+        bool timeIsUp();
 
 };
 

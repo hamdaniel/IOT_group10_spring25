@@ -2,9 +2,12 @@
 
 
 // C'tor , D'tor, Start and End Functions
-PuzzleBox::PuzzleBox(BluetoothSerial* bt) : game_started(false), curr_puzzle(nullptr),
-						 puzzle_count(0), puzzles_solved(0), strikes(0), matrix(nullptr), timer(nullptr),
-						 btns(nullptr), mp3(nullptr), SerialBT(bt)
+PuzzleBox::PuzzleBox(BluetoothSerial* bt) : game_started(false),
+											curr_puzzle(nullptr), puzzle_count(0),
+											puzzles_solved(0), strikes(0),
+											matrix(nullptr), timer(nullptr),
+											btns(nullptr), mp3(nullptr), SerialBT(bt)
+											
 {	
 	matrix = new LedMatrix();
 	btns = new UDRLInput();
@@ -38,7 +41,9 @@ void PuzzleBox::startGame(int num_puzzles) {
 
 	String secs = readFromBT();
 	Serial.println("Starting timer with: " + secs);
-	timer->start(secs.toInt());
+
+	//starting timer on separate core logic
+    timer->start(secs.toInt());
 }
 
 void PuzzleBox::endGame() {
@@ -131,7 +136,7 @@ void PuzzleBox::play()
 		}
 	}
 
-	timer->update(); //Update the timer
+	
 
 	if(puzzles_solved == puzzle_count) // Win logic
 	{

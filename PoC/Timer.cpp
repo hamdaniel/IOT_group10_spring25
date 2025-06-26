@@ -20,13 +20,39 @@ Timer::~Timer()
 }
 
 void Timer::start(int time)
-{   
+{
     startTime = millis();
     active = true;
     lastUpdateTime = millis();
     timeToElapse = time;
     secLeft = time;
+    Serial.println(String("creating update wrapper. blink is: ") + (blinking ? "true" : "false"));
+    // If update task is not already running, create it
+    if (taskHandle == nullptr) {
+        xTaskCreatePinnedToCore(
+            Timer::updateWrapper,
+            "TimerUpdateTask",
+            2048,
+            this,
+            0, // lowest priority
+            &taskHandle,
+            0  // core 0
+        );
+    }
 }
+
+void Timer::updateWrapper(void* timer_instance)
+{
+    Timer* instance = static_cast<Timer*>(timer_instance);
+    Serial.println(String("inside update wrapper. blink is: ") + (instance->blinking ? "true" : "false"));
+
+    while (true) {
+        instance->update();  // call your method
+        vTaskDelay(50 / portTICK_PERIOD_MS);  // ~20Hz polling, change if needed
+    }
+  
+}
+
 void Timer::update()
 {
     if(!active)
@@ -37,6 +63,7 @@ void Timer::update()
     if(currentMillis - lastUpdateTime >= TEST_DELAY && (lastUpdateTime!=0))
     {
         if (!blinking) {
+            Serial.println("starting blink!");
             // Countdown logic
             if (secLeft >= 0) {
                 display.showNumberDec(secLeft, true);
@@ -87,6 +114,12 @@ void Timer::reset()
     blinking = false;
     blinkCount = 0;
     blinkState = false;
-    display.setSegments(blank);   
+    display.setSegments(blank);
+
+    
+    if (taskHandle != nullptr) {
+        vTaskDelete(taskHandle);     // FreeRTOS deletes the task
+        taskHandle = nullptr;        // Reset the handle so we can restart later
+    }
 }
 
