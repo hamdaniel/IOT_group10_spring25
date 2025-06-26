@@ -5,10 +5,14 @@
 // // strips you might need to change the third parameter -- see the
 // // strandtest example for more information on possible values.
 
-
+#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
+  		clock_prescale_set(clock_div_1);
+#endif
+	
 
 PuzzleBox* pbox = nullptr;
 BluetoothSerial* SerialBT = nullptr;
+Adafruit_NeoPixel* pixels = nullptr;
 
 bool isNumber(const String& str) {
   if (str.length() == 0) return false;
@@ -23,7 +27,11 @@ void setup() {
   Serial.begin(115200);              // USB serial monitor
   SerialBT = new BluetoothSerial();
 	SerialBT->begin("ESP32_BT_Server"); // Bluetooth name
-  pbox = new PuzzleBox(SerialBT);
+
+  pixels = new Adafruit_NeoPixel(TOTAL_PIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+	pixels->begin();
+
+  pbox = new PuzzleBox(SerialBT, pixels);
   Serial.println("finished setup");
 }
 

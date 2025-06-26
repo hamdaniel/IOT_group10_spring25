@@ -63,7 +63,6 @@ void Timer::update()
     if(currentMillis - lastUpdateTime >= TEST_DELAY && (lastUpdateTime!=0))
     {
         if (!blinking) {
-            Serial.println("starting blink!");
             // Countdown logic
             if (secLeft >= 0) {
                 display.showNumberDec(secLeft, true);

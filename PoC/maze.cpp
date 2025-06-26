@@ -95,7 +95,7 @@ Maze::~Maze()
 void Maze::draw() {
   led_matrix->clearPixels();
   
-  for(int i = 0; i < NUMPIXELS; i++) { 
+  for(int i = 0; i < ROW_LEN * COL_LEN; i++) { 
     if(!board[i] && isVisible(i)) {
       led_matrix->lightPixel(i, wall_colors[colorIdx(i)]);
     }

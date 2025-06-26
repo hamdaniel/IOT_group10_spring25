@@ -5,7 +5,19 @@
 #include "BluetoothSerial.h"
 #include <stdlib.h>
 
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+ #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
+#endif
+#define NEOPIXEL_PIN        13 // On Trinket or Gemma, suggest changing this to 1
+#define MATRIX_NUM_PIXELS 256
+#define STRIP_NUM_PIXELS 10
+#define RING_NUM_PIXELS 16
+#define TOTAL_PIXELS (MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS + RING_NUM_PIXELS)
+
 #include "ledMatrix.h"
+#include "ledMatrix.h"
+
 #include "btnInput.h"
 #include "sound.h"
 #include "Timer.h"
@@ -22,26 +34,26 @@ class PuzzleBox {
 	private:
 		// PuzzleBox General Properties
 		bool game_started;
-
 		Puzzle* curr_puzzle;
 		int puzzle_count;
 		int puzzles_solved;
 		int strikes;
-
+		
 		// Displays
-		LedMatrix* matrix = nullptr;
-		Timer* timer = nullptr;
-		// LedStrip* strikes_solved = nullptr;
-		// LedStrip* strip = nullptr;
-
+		Adafruit_NeoPixel* pixels;
+		LedMatrix* matrix;
+		LedElement* strip;
+		LedElement* ring;
+		
+		Timer* timer;
 		// Input
-		UDRLInput* btns = nullptr;
+		UDRLInput* btns;
 
 		// Audio
-		Mp3Player* mp3 = nullptr;
+		Mp3Player* mp3;
 
 		//BT init
-		BluetoothSerial* SerialBT = nullptr;
+		BluetoothSerial* SerialBT;
 
 		// Puzzle creators
 		Maze* createMaze();
@@ -50,7 +62,7 @@ class PuzzleBox {
 		//Helper Functions
 		String readFromBT();
 	public:
-		PuzzleBox(BluetoothSerial* bt);
+		PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px);
 		~PuzzleBox();
 
 		void startPuzzle(String name);

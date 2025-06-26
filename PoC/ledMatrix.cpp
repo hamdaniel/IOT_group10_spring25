@@ -1,21 +1,6 @@
 #include "ledMatrix.h"
 
-LedMatrix::LedMatrix() : pixels(NUMPIXELS, MATRIX_PIN, NEO_GRB + NEO_KHZ800)
-{
-#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-#endif
-  pixels.begin();
-  pixels.clear();
-  pixels.show();
-
-	text_color = generateColor(10,5,0);
-}
-
-uint32_t LedMatrix::generateColor(int r, int g, int b)
-{
-  return pixels.Color(r > 255 ? 255 : r, g > 255 ? 255 : g, b > 255 ? 255 : b);
-}
+LedMatrix::LedMatrix(Adafruit_NeoPixel* p, int o, int n) : LedElement(p,o,n) {} 
 
 
 int LedMatrix::convertIdx(int idx)
@@ -33,17 +18,5 @@ int LedMatrix::convertIdx(int idx)
 
 void LedMatrix::lightPixel(int idx, uint32_t color)
 {
-	pixels.setPixelColor(convertIdx(idx), color);
+	pixels->setPixelColor(offset + convertIdx(idx), color);
 }
-
-void LedMatrix::clearPixels()
-{
-	pixels.clear();
-  pixels.show();
-}
-
-void LedMatrix::show()
-{
-  pixels.show();
-}
- 

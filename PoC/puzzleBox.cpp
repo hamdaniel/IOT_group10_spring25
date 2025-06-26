@@ -2,14 +2,21 @@
 
 
 // C'tor , D'tor, Start and End Functions
-PuzzleBox::PuzzleBox(BluetoothSerial* bt) : game_started(false),
+PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_started(false),
 											curr_puzzle(nullptr), puzzle_count(0),
-											puzzles_solved(0), strikes(0),
-											matrix(nullptr), timer(nullptr),
+											puzzles_solved(0), strikes(0), pixels(px),
+											matrix(nullptr), strip(nullptr), ring(nullptr), timer(nullptr),
 											btns(nullptr), mp3(nullptr), SerialBT(bt)
 											
 {	
-	matrix = new LedMatrix();
+	
+	matrix = new LedMatrix(pixels, 0, MATRIX_NUM_PIXELS);
+	strip = new LedElement(pixels, MATRIX_NUM_PIXELS, STRIP_NUM_PIXELS);
+	strip->lightSolid(strip->generateColor(3,3,3));
+
+	ring = new LedElement(pixels, MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS, RING_NUM_PIXELS);
+	ring->lightSolid(strip->generateColor(0,0,3));
+
 	btns = new UDRLInput();
 	timer = new Timer();
 	mp3 = new Mp3Player();
@@ -25,9 +32,13 @@ PuzzleBox::~PuzzleBox()
 	}
 
 	matrix->clearPixels();
+	strip->clearPixels();
+	ring->clearPixels();
 	timer->reset();
 
 	delete matrix;
+	delete strip;
+	delete ring;
 	delete btns;
 	delete timer;
 	delete mp3;
