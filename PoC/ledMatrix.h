@@ -16,19 +16,10 @@
 class LedMatrix
 {
 	Adafruit_NeoPixel pixels;
-	uint32_t text_color;
 
 
-
-	struct IdleAnimationState {
-		bool active = false;
-		int phase = 0; // 0 = display, 1 = clear
-		unsigned long lastUpdate = 0;
-	};
 
 	int convertIdx(int idx);
-
-	IdleAnimationState idle_anim;
 
 	
 	public:
@@ -40,10 +31,6 @@ class LedMatrix
 	
 	void clearPixels();
 	void show();
-	
-	void startIdleAnimation();
-	void stopIdleAnimation();
-	void updateIdleAnimation();
 	
 	uint32_t generateColor(int r, int g, int b);
 	
