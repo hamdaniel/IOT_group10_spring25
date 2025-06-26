@@ -1,5 +1,5 @@
-#ifndef MINE_H
-#define MINE_H
+#ifndef SUYMBOLS_H
+#define SUYMBOLS_H
 
 #include <stdbool.h>
 #include <Arduino.h>
@@ -14,22 +14,26 @@
 #define ROW_LEN 16
 #define COL_LEN 16
 
-class Mine : public MatrixPuzzle {
-private:
-    // Game state
-    std::vector<std::vector<int>> minefield; // 0: empty, 1: mine, 2: safe
-    int player_x;
-    int player_y;
-    int score;
-    int time_limit;
+/*
+Communication with the application:
+1. App sends the symbol to be displayed.
+2. ESP listens for both success and quitting messages from the app:
+    - For the coding for new symbol, parse it and initialize the symbol positions.
+*/
+class symbol : public MatrixPuzzle {
+    private:
+        bool symbol_pos[256]; // 1D array to store the position of each pixel in the symbol
+        int color; // 0: blue, 1: green, 2: red
+        unsigned long last_change_time; // Time of the last color change
 
-    // Game logic
-    void generateMinefield(int rows, int cols, int mines);
-    bool isValidMove(int x, int y);
-    void updateScore(int x, int y);
-    
-    // Drawing
-    void draw() override;
-    void endAnimation() override;
+        void draw() override;
+        void change_color();
 
-#endif // MINE_H
+    public:
+        symbol(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs);
+        ~symbol();
+        void update_pazzle_data(string input) override;
+        void play() override;
+}
+
+#endif // SYMBOLS_H
