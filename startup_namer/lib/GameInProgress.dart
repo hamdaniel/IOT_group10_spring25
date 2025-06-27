@@ -32,6 +32,21 @@ class GameSelectionScreen extends StatefulWidget {
 class _GameSelectionScreenState extends State<GameSelectionScreen> {
   Set<String> completedGames = {};
 
+  String getGameDescription(String key) {
+    switch (key) {
+      case "maze":
+        return "This is a maze game. You cannot see the full maze, only a small area around your position is visible. Use the compass on your phone to navigate to the exit.";
+      case "snake":
+        return "This is a snake game. Use the buttons to turn and eat apples. The apples are not visible on the matrix, you can only see their position on your phone.";
+      case "morse":
+        return "Decode the Morse code shown on the LED and unscramble the letters to form a real word. Then, for a word of length n with letters l₁, l₂, ..., lₙ (where lᵢ is the alphabetical position of the i-th letter), calculate the sum:\n\nS = 1×l₁ + 2×l₂ + ... + n×lₙ = ∑ᵢ₌₁ⁿ (i × lᵢ)\n\nThen, compute S mod 3:\n0: 1 long press on the button\n1: 1 short press on the button\n2: 2 short presses on the button";
+      case "wires":
+        return "Wires game coming soon!";
+      default:
+        return "The game is $key";
+    }
+  }
+
   Future<void> _startGame(String game) async {
     if (game == "maze") {
       final result = await startMazeGame(
@@ -141,10 +156,44 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset(
-                                gameImages[game] ?? '',
-                                width: 90,
-                                height: 90,
+                              Stack(
+                                children: [
+                                  Image.asset(
+                                    gameImages[game] ?? '',
+                                    width: 90,
+                                    height: 90,
+                                  ),
+                                  if (!isDone)
+                                    Positioned(
+                                      top: 2,
+                                      right: 2,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (_) => AlertDialog(
+                                              title: Text("Game Info"),
+                                              content: Text(getGameDescription(game)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.of(context).pop(),
+                                                  child: Text("OK"),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.black54,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          padding: EdgeInsets.all(6),
+                                          child: Icon(Icons.help_outline, color: Colors.white, size: 26),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                               SizedBox(height: 8),
                               Text(
@@ -152,6 +201,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                                 style: TextStyle(
                                   color: isDone ? Colors.greenAccent.shade400 : Colors.white,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 14, // Smaller label text
                                 ),
                               ),
                               if (isDone)

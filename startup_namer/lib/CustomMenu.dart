@@ -76,7 +76,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Wires game coming soon!')),
       );
-        } else if (game == "morse") {
+    } else if (game == "morse") {
       final result = await Navigator.push<Map<String, int>>(
         context,
         MaterialPageRoute(
@@ -125,18 +125,32 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           mazeVision: mazeVision ?? 1,
           snakeScoreToBeat: snakeScoreToBeat ?? 100,
           snakeSpeed: snakeSpeed ?? 1.0,
-          
         ),
       ),
     );
+  }
+
+  String getGameDescription(String key) {
+    switch (key) {
+      case "maze":
+        return "This is a maze game. You cannot see the full maze, only a small area around your position is visible. Use the compass on your phone to navigate to the exit.";
+      case "snake":
+        return "This is a snake game. Use the buttons to turn and eat apples. The apples are not visible on the matrix, you can only see their position on your phone.";
+      case "morse":
+        return "Decode the Morse code shown on the LED and unscramble the letters to form a real word. Then, for a word of length n with letters l₁, l₂, ..., lₙ (where lᵢ is the alphabetical position of the i-th letter), calculate the sum:\n\nS = 1×l₁ + 2×l₂ + ... + n×lₙ = ∑ᵢ₌₁ⁿ (i × lᵢ)\n\nThen, compute S mod 3:\n0: 1 long press on the button\n1: 1 short press on the button\n2: 2 short presses on the button";
+      case "wires":
+        return "Wires game coming soon!";
+      default:
+        return "The game is $key";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final mazeImage = 'assets/maze.png';
     final snakeImage = 'assets/snake.png';
-    final wiresImage = 'assets/wires.png'; 
-    final morseImage = 'assets/morse.png'; 
+    final wiresImage = 'assets/wires.png';
+    final morseImage = 'assets/morse.png';
 
     Widget gameTile(String label, String asset, String key) {
       final isSelected = selectedGames.contains(key);
@@ -174,7 +188,43 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           padding: EdgeInsets.all(8),
           child: Column(
             children: [
-              Image.asset(asset, width: 90, height: 90),
+              Stack(
+                children: [
+                  Image.asset(asset, width: 90, height: 90),
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: Text("Game Info"),
+                            content: Text(
+                              getGameDescription(key),
+                              style: TextStyle(fontSize: 15), // Smaller text
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text("OK"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.help_outline, color: Colors.white, size: 26),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: 8),
               Text(
                 label,

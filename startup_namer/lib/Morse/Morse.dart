@@ -15,10 +15,9 @@ Future<String> startMorseGame({
   final filtered = morseWords.where((w) => w.length == wordLength).toList();
   final wordList = filtered.isNotEmpty ? filtered : morseWords;
   final word = (wordList..shuffle()).first;
-  final mutated = String.fromCharCodes(word.runes.toList()..shuffle());
 
-  // Send mutated word to ESP32
-  connection?.output.add(Uint8List.fromList('$mutated\n'.codeUnits));
+  connection?.output.add(Uint8List.fromList("morse\n".codeUnits));
+  connection?.output.add(Uint8List.fromList('$word\n'.codeUnits));
 
   // Show the Morse wait screen and return the result ("win" or "lose")
   final result = await Navigator.of(menuContext).push<String>(
