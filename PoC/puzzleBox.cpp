@@ -6,7 +6,7 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 											curr_puzzle(nullptr), puzzle_count(0),
 											puzzles_solved(0), strikes(0), pixels(px),
 											matrix(nullptr), strip(nullptr), ring(nullptr), timer(nullptr),
-											btns(nullptr), mp3(nullptr), SerialBT(bt)
+											mat_btns(nullptr), morse_btn(nullptr), mp3(nullptr), SerialBT(bt)
 											
 {	
 	
@@ -22,7 +22,9 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 	
 	pixels->show();
 
-	btns = new UDRLInput();
+	mat_btns = new UDRLInput();
+	morse_btn = new BigBtn();
+
 	timer = new Timer();
 	mp3 = new Mp3Player();
 
@@ -45,7 +47,8 @@ PuzzleBox::~PuzzleBox()
 	delete matrix;
 	delete strip;
 	delete ring;
-	delete btns;
+	delete mat_btns;
+	delete morse_btn;
 	delete timer;
 	delete mp3;
 }
@@ -82,11 +85,15 @@ bool PuzzleBox::validGameName(String name)
 
 void PuzzleBox::startPuzzle(String name)
 {
-	if (name == "maze") {
+	Serial.println("Puzzle to create: " + name);
+	if(name == "maze") {
 		curr_puzzle = createMaze();
 	}
-	else if (name == "snake") {
+	else if(name == "snake") {
 		curr_puzzle = createSnake();
+	}
+	else if(name == "morse") {
+		curr_puzzle = createMorse();
 	}
 	else {
 		// Handle unknown puzzle name
@@ -121,7 +128,7 @@ Maze* PuzzleBox::createMaze()
 	String time = readFromBT();
 	String dist = readFromBT();
 	Serial.println("Creating Maze with board: " + boardStr + ", time: " + time + ", distance: " + dist);
-	return new Maze(SerialBT, mp3, ring, matrix, btns, boardStr, dist.toInt(), time.toInt() * 1000);
+	return new Maze(SerialBT, mp3, ring, matrix, mat_btns, boardStr, dist.toInt(), time.toInt() * 1000);
 }
 
 Snake* PuzzleBox::createSnake()
@@ -129,8 +136,17 @@ Snake* PuzzleBox::createSnake()
 	String max_len = readFromBT();
 	String speed = readFromBT();
 	Serial.println("Creating Snake with target length: " + max_len + ", speed: " + speed);
-	return new Snake(SerialBT, mp3, ring, matrix, btns, (int)(1000 / speed.toFloat()), max_len.toInt());
+	return new Snake(SerialBT, mp3, ring, matrix, mat_btns, (int)(1000 / speed.toFloat()), max_len.toInt());
 }
+
+
+Morse* PuzzleBox::createMorse()
+{
+	String word = readFromBT();
+	Serial.println("Creating Morse with word: " + word);
+	return new Morse(SerialBT,mp3,ring,morse_btn,word);
+}
+
 // Main Function
 void PuzzleBox::play()
 {

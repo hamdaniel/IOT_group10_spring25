@@ -110,7 +110,7 @@ void Maze::draw() {
 
   led_matrix->lightPixel(player_pos, player_color);
 
-  Serial.printf("[Maze] ring: %p\n", ring);
+
 
 
   // Light the ring according to the time left

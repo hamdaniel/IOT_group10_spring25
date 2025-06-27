@@ -30,4 +30,4 @@ class Timer{
     void changeDisplay();
 };
 
-#endif //TIMER_H
+#endif // TIMER_H

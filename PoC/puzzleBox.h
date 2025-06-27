@@ -18,7 +18,9 @@
 #include "ledMatrix.h"
 #include "ledMatrix.h"
 
-#include "btnInput.h"
+#include "UDRLInput.h"
+#include "BigBtn.h"
+
 #include "sound.h"
 #include "Timer.h"
 #include "puzzle.h" 
@@ -26,6 +28,8 @@
 
 #include "maze.h"    
 #include "Snake.h"
+
+#include "Morse.h"
 
 #define NUM_STRIKES 3
 
@@ -47,7 +51,8 @@ class PuzzleBox {
 		
 		Timer* timer;
 		// Input
-		UDRLInput* btns;
+		UDRLInput* mat_btns;
+		BigBtn* morse_btn;
 
 		// Audio
 		Mp3Player* mp3;
@@ -59,6 +64,9 @@ class PuzzleBox {
 		// Puzzle creators
 		Maze* createMaze();
 		Snake* createSnake();
+
+
+		Morse* createMorse();
 		
 		//Helper Functions
 		String readFromBT();

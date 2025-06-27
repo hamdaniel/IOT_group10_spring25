@@ -21,4 +21,4 @@ class LedMatrix : public LedElement
 	
 };
 
-#endif //LEDMATRIX_H
+#endif // LEDMATRIX_H

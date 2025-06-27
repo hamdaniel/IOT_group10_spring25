@@ -43,4 +43,4 @@ class Timer{
 
 };
 
-#endif //TIMER_H
+#endif // TIMER_H

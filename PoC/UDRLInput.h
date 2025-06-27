@@ -1,5 +1,5 @@
-#ifndef INPUT_H
-#define INPUT_H
+#ifndef UDRLINPUT_H
+#define UDRLINPUT_H
 
 #include <stdbool.h>
 #include <Arduino.h>
@@ -23,4 +23,4 @@ class UDRLInput{
 	bool moved(int i);
 };
 
-#endif //INPUT_H
+#endif // UDRLINPUT_H
