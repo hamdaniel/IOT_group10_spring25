@@ -170,6 +170,8 @@ void PuzzleBox::play()
 				default:
 					break;
 			}
+			ring->clearPixels();
+			matrix->clearPixels();
 			delete curr_puzzle;
 			curr_puzzle = nullptr;
 		}

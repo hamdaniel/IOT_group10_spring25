@@ -91,6 +91,7 @@ int Snake::calculate_position(int x, int y){
 }
 
 void Snake::draw(){
+
     led_matrix->clearPixels();
     
     // Draw the snake
@@ -109,7 +110,10 @@ void Snake::draw(){
     uint32_t red = led_matrix->generateColor(10, 0, 0);
     led_matrix->lightPixel(pos, red); // Red color for the food
 
-    
+    ring->clearPixels();
+    double fraction = (double)(snake_length - 1) / (double)(max_length - 1);
+    ring->lightFraction(fraction,ring_color);
+
 }
 
 

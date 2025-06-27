@@ -22,7 +22,6 @@ Timer::~Timer()
 
 void Timer::start(int time)
 {
-    time -=28;
     startTime = millis();
     active = true;
     timeToElapse = time;
