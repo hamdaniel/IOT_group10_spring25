@@ -8,22 +8,22 @@ const int wall_r = 1;
 const int wall_g = 1;
 const int wall_b = 1;
 
-const int game_over_wall_r = 10;
-const int game_over_wall_g = 0;
-const int game_over_wall_b = 0;
+const int game_over_r = 10;
+const int game_over_g = 0;
+const int game_over_b = 0;
 
 const int player_r = 0;
 const int player_g = 10;
 const int player_b = 0;
 
 
-int Maze::calcRGBVal(int c, int i) const
+int Maze::genRGBVal(int c, int i) const
 {
   return min(c * ((max(dist, 1) + 1 - i) << (max(dist, 1) + 1 - i)) , 255);
 }
 
-Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) :
-      MatrixPuzzle(bt, mp3, lm, bs),  dist(d), time(t)
+Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* lm, UDRLInput* bs, String input, int d, int t) :
+      MatrixPuzzle(bt, mp3, r, lm, bs), dist(d), time(t)
 {
 
 	//init moves array
@@ -73,23 +73,26 @@ Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, St
   target_colors = new uint32_t[max(dist,1)];
   
   player_color = led_matrix->generateColor(player_r, player_g, player_b);
-  game_over_wall_color = led_matrix->generateColor(game_over_wall_r, game_over_wall_g, game_over_wall_b);
+  game_over_color = led_matrix->generateColor(game_over_r, game_over_g, game_over_b);
   for(int i = 0; i < max(dist,1); i++)
   {
-    wall_colors[i] = led_matrix->generateColor(calcRGBVal(wall_r, i), calcRGBVal(wall_g, i), calcRGBVal(wall_b, i));
-    target_colors[i] = led_matrix->generateColor(calcRGBVal(target_r, i), calcRGBVal(target_g, i), calcRGBVal(target_b, i));
+    wall_colors[i] = led_matrix->generateColor(genRGBVal(wall_r, i), genRGBVal(wall_g, i), genRGBVal(wall_b, i));
+    target_colors[i] = led_matrix->generateColor(genRGBVal(target_r, i), genRGBVal(target_g, i), genRGBVal(target_b, i));
   }
 
   maze_start_time = millis();
-
+  Serial.print("r is: ");
+  Serial.println((uintptr_t)r, HEX);  // prints address in hex
+  Serial.print("ring color is: ");
+  Serial.println(ring_color);
+  ring->lightSolid(ring_color);
+  Serial.println("initialized Maze!");
 }
 
 Maze::~Maze()
 {
   delete[] wall_colors;
   delete[] target_colors;
-  
-  led_matrix->clearPixels();
 }
 
 void Maze::draw() {
@@ -105,9 +108,18 @@ void Maze::draw() {
     led_matrix->lightPixel(target_pos, target_colors[colorIdx(target_pos)]);
   }
 
-  led_matrix->lightPixel(player_pos, player_color); 
-  led_matrix->show();
-  
+  led_matrix->lightPixel(player_pos, player_color);
+
+  Serial.printf("[Maze] ring: %p\n", ring);
+
+
+  // Light the ring according to the time left
+  ring->clearPixels();
+
+  int ring_size = ring->getNumPixels();
+  int elapsed = millis() - maze_start_time;
+  double fraction = ((double)(time - elapsed) / time);
+  ring->lightFraction(fraction, ring_color);
 }
 
 bool Maze::isValid(int new_loc)
@@ -169,25 +181,29 @@ void Maze::endAnimation()
     if(canDelete()) // finished end animation, clear board
     {
       led_matrix->clearPixels();
+      ring->clearPixels();
     }
     return;
   }
   
   end_anim_start_time = millis();
   mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
-  uint32_t color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_wall_color;
+  uint32_t mat_color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)
   {
     if(!board[i])
     {
-      led_matrix->lightPixel(i, color);
+      led_matrix->lightPixel(i, mat_color);
     }
   }
 
   led_matrix->lightPixel(target_pos,target_colors[0]);
   led_matrix->lightPixel(player_pos, player_color);
-  led_matrix->show();
+
+  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : game_over_color);
+  
+  
   
 
 }

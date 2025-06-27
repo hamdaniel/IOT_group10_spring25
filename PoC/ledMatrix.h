@@ -3,9 +3,7 @@
 
 #include "ledElement.h"
 
-
 #define COL_LEN 16
-
 
 class LedMatrix : public LedElement
 {

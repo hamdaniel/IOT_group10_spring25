@@ -1,6 +1,8 @@
 {
 	"cmake.ignoreCMakeListsMissing": true,
 	"files.associations": {
-		"xlocale": "cpp"
+		"xlocale": "cpp",
+		"limits": "cpp",
+		"utility": "cpp"
 	}
 }

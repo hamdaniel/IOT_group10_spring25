@@ -7,6 +7,7 @@
 #include <stdlib.h> 
 
 #include "ledMatrix.h"
+#include "ledElement.h"
 #include "btnInput.h"
 #include "sound.h"
 #include "puzzle.h"
@@ -26,7 +27,8 @@ class MatrixPuzzle : public Puzzle {
 		virtual void endAnimation() = 0;
 
 	public:
-		MatrixPuzzle(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* mat, UDRLInput* bs) : Puzzle(bt, mp3), led_matrix(mat), btns(bs), end_anim_start_time(0) {};
+		MatrixPuzzle(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* mat, UDRLInput* bs) : Puzzle(bt, mp3, r), led_matrix(mat),
+																										  btns(bs), end_anim_start_time(0) {Serial.println("initialized MatrixPuzzle!");};
 		~MatrixPuzzle() override {};
 
 		virtual puzzle_status getStatus() const override { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };

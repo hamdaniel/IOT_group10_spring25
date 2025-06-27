@@ -9,6 +9,7 @@ Timer::Timer() : display(CLK, DIO)
     blinking = false;
     blinkCount = 0;
     blinkState = false;
+    lastDisplayedSec = -1;
     display.setBrightness(0x0a);
     display.setSegments(blank);
     //display.showNumberDec(secLeft, true);
@@ -21,12 +22,15 @@ Timer::~Timer()
 
 void Timer::start(int time)
 {
+    time -=28;
     startTime = millis();
     active = true;
-    lastUpdateTime = millis();
     timeToElapse = time;
     secLeft = time;
-    Serial.println(String("creating update wrapper. blink is: ") + (blinking ? "true" : "false"));
+    lastDisplayedSec = timeToElapse;
+    display.showNumberDec(timeToElapse, true, 4);
+    lastUpdateTime = 0;
+
     // If update task is not already running, create it
     if (taskHandle == nullptr) {
         xTaskCreatePinnedToCore(
@@ -44,7 +48,6 @@ void Timer::start(int time)
 void Timer::updateWrapper(void* timer_instance)
 {
     Timer* instance = static_cast<Timer*>(timer_instance);
-    Serial.println(String("inside update wrapper. blink is: ") + (instance->blinking ? "true" : "false"));
 
     while (true) {
         instance->update();  // call your method
@@ -55,53 +58,73 @@ void Timer::updateWrapper(void* timer_instance)
 
 void Timer::update()
 {
-    if(!active)
-    {
+    if (!active)
         return;
-    }
+
     unsigned long currentMillis = millis();
-    if(currentMillis - lastUpdateTime >= TEST_DELAY && (lastUpdateTime!=0))
+
+    if (blinking)
     {
-        if (!blinking) {
-            // Countdown logic
-            if (secLeft >= 0) {
-                display.showNumberDec(secLeft, true);
-                lastUpdateTime = currentMillis;
-                secLeft--;
+        if (currentMillis - lastBlinkTime >= TEST_DELAY)
+        {
+            blinkState = !blinkState;
+            lastBlinkTime = currentMillis;
+
+            if (blinkState)
+            {
+                display.showNumberDec(0, true, 4);
             }
-            // Start blinking when countdown ends
-            if (secLeft < 0) {
-                blinking = true;
-                blinkCount = 0;
-                blinkState = false;
-                lastBlinkTime = currentMillis;
+            else
+            {
+                blinkCount++;
+                display.setSegments(blank);
             }
-        } else {
-            // Blinking logic: blink zero three times
-            if (currentMillis - lastBlinkTime >= TEST_DELAY) {
-                blinkState = !blinkState;
-                lastBlinkTime = currentMillis;
-                if (blinkState) {
-                    display.showNumberDec(0, true);
-                    blinkCount++;
-                } else {
-                    display.setSegments(blank);
-                }
-                // Stop blinking after five blinks
-                if (blinkCount >= 5) {
-                    blinking = false; // Stop blinking
-                    display.setSegments(blank);
-                    active = false;
-                }
+
+            if (blinkCount >= 5)
+            {
+                blinking = false;
+                display.setSegments(blank);
+                active = false;
             }
         }
     }
+
+    // Check if enough time has passed for an update
+    else if (currentMillis - lastUpdateTime >= TEST_DELAY || lastUpdateTime == 0)
+    {
+        unsigned long elapsed = currentMillis - startTime;
+        int remainingSec = ((timeToElapse * 1000 - elapsed) + 999) / 1000;
+
+        if (remainingSec > 0)
+        {
+            if (remainingSec != lastDisplayedSec)
+            {
+                display.showNumberDec(remainingSec, true, 4);
+                lastDisplayedSec = remainingSec;
+            }
+            lastUpdateTime = currentMillis;
+        }
+        else if (!blinking)
+        {
+            display.showNumberDec(0, true, 4);
+            blinking = true;
+            blinkCount = 0;
+            blinkState = false;
+            lastBlinkTime = currentMillis;
+        }
+    }
+
     
 }
 
-bool Timer::timeIsUp()
+bool Timer::timeIsUp() const
 {
-    return startTime != 0 && (millis() - startTime) >= (timeToElapse * 1000);
+    return startTime != 0 && (((long)(timeToElapse * 1000) - (long)(millis() - startTime) + 999) / 1000 < 0);
+}
+
+bool Timer::finished() const
+{
+    return !active && blinkCount >= 5;
 }
 
 void Timer::reset()

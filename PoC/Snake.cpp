@@ -1,6 +1,6 @@
 #include "Snake.h"
 
-Snake::Snake(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, int s, int m_l) : MatrixPuzzle(bt, mp3, lm, bs), speed(s), max_length(m_l) {
+Snake::Snake(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* lm, UDRLInput* bs, int s, int m_l) : MatrixPuzzle(bt, mp3, r, lm, bs), speed(s), max_length(m_l) {
     snake_length = 1;
     snake_pos[0][0] = 8; // Starting position x
     snake_pos[0][1] = 8; // Starting position y
@@ -108,8 +108,8 @@ void Snake::draw(){
     pos = calculate_position(food_pos[0], food_pos[1]);
     uint32_t red = led_matrix->generateColor(10, 0, 0);
     led_matrix->lightPixel(pos, red); // Red color for the food
+
     
-    led_matrix->show();
 }
 
 

@@ -50,13 +50,15 @@ void Timer::changeDisplay()
                     display.showNumberDec(0, true);
                     blinkCount++;
                 } else {
-                    display.setSegments(blank);
+                    display.clear();
+                    display.show();
                 }
                 // Stop blinking after five blinks
                 if (blinkCount >= 5) {
                     blinking = false; // Stop blinking
                     secLeft = timeToElapse; // Reset countdown
-                    display.setSegments(blank);
+                    display.clear();
+                    display.show();
                 }
             }
         }

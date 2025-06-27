@@ -33,7 +33,7 @@ class PuzzleBox {
 
 	private:
 		// PuzzleBox General Properties
-		bool game_started;
+		bool game_running;
 		Puzzle* curr_puzzle;
 		int puzzle_count;
 		int puzzles_solved;
@@ -55,20 +55,22 @@ class PuzzleBox {
 		//BT init
 		BluetoothSerial* SerialBT;
 
+		
 		// Puzzle creators
 		Maze* createMaze();
 		Snake* createSnake();
-
+		
 		//Helper Functions
 		String readFromBT();
-	public:
+		
+		public:
 		PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px);
 		~PuzzleBox();
-
+		
 		void startPuzzle(String name);
 		bool validGameName(String name);
 		void startGame(int num_puzzles);
-		void endGame();
+		void cleanupGame();
 
 		void play();
 };

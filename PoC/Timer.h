@@ -22,9 +22,10 @@ class Timer{
         bool blinking;
         int blinkCount;
         bool blinkState;
+        int lastDisplayedSec;
         TaskHandle_t taskHandle;
         TM1637Display display;
-        uint8_t blank[4] = { 0x00, 0x00, 0x00, 0x00 };
+        const uint8_t blank[4] = { 0x00, 0x00, 0x00, 0x00 };
 
 
     public:
@@ -37,7 +38,8 @@ class Timer{
         void update();
         void reset();
 
-        bool timeIsUp();
+        bool timeIsUp() const;
+        bool finished() const;
 
 };
 

@@ -48,7 +48,7 @@ void loop() {
       }
 
       else if (msg == "exit") { // "exit" -> End PuzzleBox
-        pbox->endGame();
+        pbox->cleanupGame();
       }
 
       else if (pbox->validGameName(msg)) { // name -> Create New Puzzle

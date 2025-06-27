@@ -2,7 +2,7 @@
 
 
 // C'tor , D'tor, Start and End Functions
-PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_started(false),
+PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(false),
 											curr_puzzle(nullptr), puzzle_count(0),
 											puzzles_solved(0), strikes(0), pixels(px),
 											matrix(nullptr), strip(nullptr), ring(nullptr), timer(nullptr),
@@ -12,10 +12,15 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_started(
 	
 	matrix = new LedMatrix(pixels, 0, MATRIX_NUM_PIXELS);
 	strip = new LedElement(pixels, MATRIX_NUM_PIXELS, STRIP_NUM_PIXELS);
-	strip->lightSolid(strip->generateColor(3,3,3));
-
 	ring = new LedElement(pixels, MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS, RING_NUM_PIXELS);
-	ring->lightSolid(strip->generateColor(0,0,3));
+	
+	matrix->clearPixels();
+	strip->clearPixels();
+	ring->clearPixels();
+	
+	strip->lightSolid(strip->generateColor(5,5,5));
+	
+	pixels->show();
 
 	btns = new UDRLInput();
 	timer = new Timer();
@@ -34,6 +39,7 @@ PuzzleBox::~PuzzleBox()
 	matrix->clearPixels();
 	strip->clearPixels();
 	ring->clearPixels();
+	pixels->show();
 	timer->reset();
 
 	delete matrix;
@@ -45,7 +51,10 @@ PuzzleBox::~PuzzleBox()
 }
 
 void PuzzleBox::startGame(int num_puzzles) {
-	game_started = true;
+	// First, clear up any previous game
+	cleanupGame();
+
+	game_running = true;
 	puzzle_count = num_puzzles;
 	puzzles_solved = 0;
 	strikes = NUM_STRIKES;
@@ -53,19 +62,13 @@ void PuzzleBox::startGame(int num_puzzles) {
 	String secs = readFromBT();
 	Serial.println("Starting timer with: " + secs);
 
+	matrix->clearPixels();
+	strip->clearPixels();
+	ring->clearPixels();
+	pixels->show();
+
 	//starting timer on separate core logic
     timer->start(secs.toInt());
-}
-
-void PuzzleBox::endGame() {
-	game_started = false;
-	puzzle_count = 0;
-	puzzles_solved = 0;
-	strikes = 0;
-	delete curr_puzzle;
-	curr_puzzle = nullptr;
-	timer->reset();
-	Serial.println("Stopping puzzle box");
 }
 
 // Puzzle Creation Functions
@@ -90,6 +93,26 @@ void PuzzleBox::startPuzzle(String name)
 	}
 }
 
+void PuzzleBox::cleanupGame()
+{
+	Serial.println("Stopping puzzle box");
+
+	// PuzzleBox Data
+	game_running = false;
+	puzzle_count = 0;
+	puzzles_solved = 0;
+	strikes = 0;
+	if(curr_puzzle != nullptr)
+		delete curr_puzzle;
+	curr_puzzle = nullptr;
+	
+	// Visuals
+	timer->reset();
+	matrix->clearPixels();
+	strip->clearPixels();
+	ring->clearPixels();
+	pixels->show();
+}
 
 Maze* PuzzleBox::createMaze()
 {
@@ -98,7 +121,7 @@ Maze* PuzzleBox::createMaze()
 	String time = readFromBT();
 	String dist = readFromBT();
 	Serial.println("Creating Maze with board: " + boardStr + ", time: " + time + ", distance: " + dist);
-	return new Maze(SerialBT, mp3, matrix, btns, boardStr, dist.toInt(), time.toInt() * 1000);
+	return new Maze(SerialBT, mp3, ring, matrix, btns, boardStr, dist.toInt(), time.toInt() * 1000);
 }
 
 Snake* PuzzleBox::createSnake()
@@ -106,19 +129,24 @@ Snake* PuzzleBox::createSnake()
 	String max_len = readFromBT();
 	String speed = readFromBT();
 	Serial.println("Creating Snake with target length: " + max_len + ", speed: " + speed);
-	return new Snake(SerialBT, mp3, matrix, btns, (int)(1000 / speed.toFloat()), max_len.toInt());
+	return new Snake(SerialBT, mp3, ring, matrix, btns, (int)(1000 / speed.toFloat()), max_len.toInt());
 }
 // Main Function
 void PuzzleBox::play()
 {
-	if(!game_started)
+	if(!game_running) // No puzzle box & finished final visuals, nothing to do here
 	{
 		return;
 	}
 
+	if(timer->finished()) // Time is up and finished blinking. Can clear all displays and set running to false
+	{
+		cleanupGame();
+	}
 	if(curr_puzzle != nullptr) // There is a puzzle to play, play it
 	{
-		curr_puzzle->play();
+		if (!timer->timeIsUp()) 
+        	curr_puzzle->play();
 
 		if(curr_puzzle->canDelete()) // Can delete puzzle
 		{
@@ -148,15 +176,22 @@ void PuzzleBox::play()
 	}
 
 	
+	pixels->show();	
 
 	if(puzzles_solved == puzzle_count) // Win logic
 	{
-		endGame();
+		Serial.println("Won Game!");
+		if(curr_puzzle != nullptr)
+			delete curr_puzzle;
+		curr_puzzle = nullptr;
 	}
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic
 	{
-		endGame();
+		Serial.println("Lost Game!");
+		if(curr_puzzle != nullptr)
+			delete curr_puzzle;
+		curr_puzzle = nullptr;
 	}
 
 }

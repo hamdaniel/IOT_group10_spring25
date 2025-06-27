@@ -7,6 +7,7 @@
 #include "BluetoothSerial.h"
 #include <stdlib.h> 
 
+#include "ledElement.h"
 #include "ledMatrix.h"
 #include "btnInput.h"
 #include "sound.h"
@@ -53,7 +54,7 @@ class Snake : public MatrixPuzzle {
         void endAnimation() override;
 
     public:
-        Snake(BluetoothSerial* bt, Mp3Player* mp3, LedMatrix* lm, UDRLInput* bs, int s, int m_l);
+        Snake(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* lm, UDRLInput* bs, int s, int m_l);
         ~Snake();
 
         void play() override;
