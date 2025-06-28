@@ -156,10 +156,30 @@ void PuzzleBox::play()
 		return;
 	}
 	
+	
 	if(timer->finished()) // Time is up and finished blinking. Can clear all displays and set running to false
 	{
 		cleanupGame();
+		return;
 	}
+
+	// If any end condition was met, do appropriate logic without playing anything
+	if(puzzles_solved == puzzle_count) // Win logic
+	{
+		Serial.print("\nwinner\n");
+		if(curr_puzzle != nullptr)
+			delete curr_puzzle;
+		curr_puzzle = nullptr;
+	}
+
+	else if(timer->timeIsUp() || strikes == 0) // Lose logic
+	{
+		Serial.print("loser ");
+		if(curr_puzzle != nullptr)
+			delete curr_puzzle;
+		curr_puzzle = nullptr;
+	}
+
 	if(curr_puzzle != nullptr) // There is a puzzle to play, play it
 	{
 		if (!timer->timeIsUp()) 
@@ -196,20 +216,6 @@ void PuzzleBox::play()
 
 	
 	pixels->show();	
-
-	if(puzzles_solved == puzzle_count) // Win logic
-	{
-		if(curr_puzzle != nullptr)
-			delete curr_puzzle;
-		curr_puzzle = nullptr;
-	}
-
-	else if(timer->timeIsUp() || strikes == 0) // Lose logic
-	{
-		if(curr_puzzle != nullptr)
-			delete curr_puzzle;
-		curr_puzzle = nullptr;
-	}
 
 }
 

@@ -18,5 +18,10 @@ int LedMatrix::convertIdx(int idx)
 
 void LedMatrix::lightPixel(int idx, uint32_t color)
 {
+  while(idx < 0)
+  {
+    idx += num_pixels;
+  }
+  
 	pixels->setPixelColor(offset + convertIdx(idx), color);
 }

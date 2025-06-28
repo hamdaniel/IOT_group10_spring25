@@ -16,6 +16,10 @@ uint32_t LedElement::generateColor(int r, int g, int b)
 
 void LedElement::lightPixel(int idx, uint32_t color)
 {
+  while(idx < 0)
+  {
+    idx += num_pixels;
+  }
 	pixels->setPixelColor(offset + idx, color);
 }
 
