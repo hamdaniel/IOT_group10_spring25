@@ -163,7 +163,6 @@ void Morse::endAnimation()
   {
     if(canDelete()) // finished end animation, clear board
     {
-      ring->clearPixels();
       digitalWrite(MORSE_LED_PIN, LOW);
       state = MorseState::DONE;
       status = (status == Puzzle::puzzle_status::win_anim ? Puzzle::puzzle_status::win : Puzzle::puzzle_status::lose);

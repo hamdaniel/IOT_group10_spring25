@@ -31,13 +31,21 @@ class Snake : public MatrixPuzzle {
         int snake_length;
         int snake_pos[64][2];
         int snake_direction; // 0: up, 1: down, 2: right, 3: left; the direction can be changed using buttons
+        bool direction_changed;
         int food_pos[2];
+        bool eaten;
 
         int speed; 
         int max_length;
 
         unsigned long last_move_time;
         bool is_game_over;
+
+        int segments_to_draw;
+        bool blink_state;            // toggles between visible/invisible
+        unsigned long last_blink_time; // tracks last toggle time
+        int BLINK_INTERVAL;    // blink every 250ms
+
 
         // Game Logic
         void generate_food();
@@ -48,7 +56,7 @@ class Snake : public MatrixPuzzle {
         void update_snake_position();
         void change_direction();
         int calculate_position(int x, int y);
-
+        void get_next_head_pos(int& next_x, int& next_y) const;
         // Drawing
         void draw() override;
         void endAnimation() override;

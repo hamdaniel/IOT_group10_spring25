@@ -137,7 +137,7 @@ Snake* PuzzleBox::createSnake()
 	String max_len = readFromBT();
 	String speed = readFromBT();
 	Serial.println("Creating Snake with target length: " + max_len + ", speed: " + speed);
-	return new Snake(SerialBT, mp3, ring, matrix, mat_btns, (int)(1000 / speed.toFloat()), max_len.toInt());
+	return new Snake(SerialBT, mp3, ring, matrix, mat_btns, (int)(750 / speed.toFloat()), max_len.toInt());
 }
 
 

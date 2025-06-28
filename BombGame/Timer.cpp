@@ -120,7 +120,7 @@ void Timer::update()
 
 bool Timer::timeIsUp() const
 {
-    return startTime != 0 && (((long)(timeToElapse * 1000) - (long)(millis() - startTime) + 999) / 1000 < 0);
+    return (!paused && startTime != 0 && (((long)(timeToElapse * 1000) - (long)(millis() - startTime) + 999) / 1000 < 0));
 }
 
 bool Timer::finished() const
