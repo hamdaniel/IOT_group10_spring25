@@ -8,44 +8,22 @@ const char* MORSE_TABLE[26] = {
   "...-", ".--", "-..-", "-.--", "--.."
 };
 
-// LED timings
-const int DOT_DURATION = 200;      // ms
+// Timings (doubled)
+const int DOT_DURATION = 400;
 const int DASH_DURATION = DOT_DURATION * 3;
 const int SYMBOL_PAUSE = DOT_DURATION;
 const int LETTER_PAUSE = DOT_DURATION * 3;
 
-// Utility to convert char to Morse string
-String getMorseCode(char c) {
-  if (c >= 'A' && c <= 'Z') return MORSE_TABLE[c - 'A'];
-  if (c >= 'a' && c <= 'z') return MORSE_TABLE[c - 'a'];
-  return "";
-}
-
-void Morse::showInMorse(char c) {
-  String morse = getMorseCode(c);
-  for (char sym : morse) {
-    if (sym == '.') {
-      digitalWrite(MORSE_LED_PIN, HIGH);
-      delay(DOT_DURATION);
-    } else if (sym == '-') {
-      digitalWrite(MORSE_LED_PIN, HIGH);
-      delay(DASH_DURATION);
-    }
-    digitalWrite(MORSE_LED_PIN, LOW);
-    delay(SYMBOL_PAUSE);
-  }
-  delay(LETTER_PAUSE); // Gap between letters
-}
 
 Morse::Morse(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, BigBtn* bb, String ow)
   : Puzzle(bt, mp3, r), btn(bb), orig_word(ow), target_val(0),
-    state(MorseState::SHOW_MORSE), currentLetterIdx(0),
-    currentSymbolIdx(0), lastActionTime(0), symbolOn(false)
+    state(MorseState::START_ANIMATION), currentLetterIdx(0),
+    currentSymbolIdx(0), lastActionTime(0), start_anim_start_time(millis()), symbolOn(false)
 {
   pinMode(MORSE_LED_PIN, OUTPUT);
   memset(permutation, 0, sizeof(permutation));
 
-  // Copy original word into permutation for debug/optional use
+  // Copy original word into permutation for optional use
   orig_word.toCharArray(permutation, orig_word.length() + 1);
 
   // Scramble the word
@@ -58,28 +36,70 @@ Morse::Morse(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, BigBtn* bb, Str
     scrambled[j] = temp;
   }
 
+  // Calculate target value
   for (int i = 0; i < orig_word.length(); i++) {
-    target_val += (orig_word[i] * i);
+    target_val += ((orig_word[i] + 1 - 'a') * (i+1));
   }
   target_val %= 3;
+  switch (target_val)
+  {
+  case 0:
+	Serial.printf("Quick press to win!\n");
+	break;
+  case 1:
+	Serial.printf("Double press to win!\n");
+	break;
+  case 2:
+	Serial.printf("Long press to win!\n");
+	break;
+  default:
+	break;
+  }
+  
 
-  // Prepare the first Morse letter
-  currentMorse = getMorseCode(scrambled[0]);
-
-  // Initialize timing and LED state
+  currentMorse = MORSE_TABLE[scrambled[0] - 'a'];
   digitalWrite(MORSE_LED_PIN, LOW);
-  lastActionTime = millis();
+}
+
+void Morse::checkForInput() {
+  btn->update();
+
+  BigBtn::PressType press = btn->getPressType();
+
+  if(press == BigBtn::NONE)
+  	return;
+
+  state = MorseState::END_ANIMATION; // If got here the player pressed the button someway, an end animation will play
+  status = (BigBtn::PressTypes[target_val] == press) ? puzzle_status::win : puzzle_status::lose;
+	
 }
 
 void Morse::play() {
   unsigned long now = millis();
 
   switch (state) {
+    case MorseState::START_ANIMATION: {
+      unsigned long elapsed = now - start_anim_start_time;
+      if ((elapsed / 1000) % 2 == 0)
+        ring->lightSolid(ring_color);
+      else
+        ring->clearPixels();
+
+      if (elapsed >= 4000) {
+        ring->clearPixels();
+        state = MorseState::SHOW_MORSE;
+        lastActionTime = now;
+      }
+
+      checkForInput();
+      break;
+    }
+
     case MorseState::SHOW_MORSE: {
       if (currentLetterIdx >= scrambled.length()) {
-		for(int i = 0; i < orig_word.length(); i++)
-        state = MorseState::WAIT_INPUT;
-        return;
+        state = MorseState::WAIT_RESTART;
+        lastActionTime = now;
+        break;
       }
 
       if (currentSymbolIdx < currentMorse.length()) {
@@ -90,43 +110,70 @@ void Morse::play() {
           lastActionTime = now;
           symbolOn = true;
         }
-        else if (symbolOn && ((sym == '.' && now - lastActionTime >= DOT_DURATION) ||
-                              (sym == '-' && now - lastActionTime >= DASH_DURATION))) {
+        else if (symbolOn &&
+                ((sym == '.' && now - lastActionTime >= DOT_DURATION) ||
+                 (sym == '-' && now - lastActionTime >= DASH_DURATION))) {
           digitalWrite(MORSE_LED_PIN, LOW);
           lastActionTime = now;
           symbolOn = false;
           currentSymbolIdx++;
         }
-      } else if (now - lastActionTime >= LETTER_PAUSE) {
+      }
+      else if (now - lastActionTime >= LETTER_PAUSE) {
         currentLetterIdx++;
         if (currentLetterIdx < scrambled.length()) {
-          currentMorse = getMorseCode(scrambled[currentLetterIdx]);
+          currentMorse = MORSE_TABLE[scrambled[currentLetterIdx] - 'a'];
           currentSymbolIdx = 0;
           lastActionTime = now;
         }
       }
+
+      checkForInput();
       break;
     }
 
-    case MorseState::WAIT_INPUT: {
-      btn->readInput();
-
-      if (target_val == 0 && btn->isSinglePress()) {
-        status = puzzle_status::win;
-        state = MorseState::DONE;
-      } else if (target_val == 1 && btn->isDoublePress()) {
-        status = puzzle_status::win;
-        state = MorseState::DONE;
-      } else if (target_val == 2 && btn->isLongPress()) {
-        status = puzzle_status::win;
-        state = MorseState::DONE;
+    case MorseState::WAIT_RESTART: {
+      if (now - lastActionTime >= 2000) {
+        currentLetterIdx = 0;
+        currentSymbolIdx = 0;
+        currentMorse = MORSE_TABLE[scrambled[0] - 'a'];
+        symbolOn = false;
+        lastActionTime = now;
+        start_anim_start_time = now;
+        state = MorseState::START_ANIMATION;
       }
+
+      checkForInput();
       break;
     }
 
-    case MorseState::DONE: {
-      // Nothing more to do. PuzzleBox will clean us up
+    case MorseState::END_ANIMATION: {
+      endAnimation();
       break;
     }
+
+    case MorseState::DONE:
+      break;
   }
+}
+
+void Morse::endAnimation()
+{
+  if(end_anim_start_time != 0) // End animation already started
+  {
+    if(canDelete()) // finished end animation, clear board
+    {
+      ring->clearPixels();
+	  digitalWrite(MORSE_LED_PIN, LOW);
+	  state = MorseState::DONE;
+    }
+    return;
+  }
+  
+  end_anim_start_time = millis();
+  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
+
+  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : ring_lose_color);
+  digitalWrite(MORSE_LED_PIN, HIGH);
+  
 }

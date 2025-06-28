@@ -33,6 +33,7 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 
 PuzzleBox::~PuzzleBox()
 {
+	Serial.println("PuzzleBox D'tor!");
 	if(curr_puzzle != nullptr)
 	{
 		delete curr_puzzle;
@@ -79,7 +80,8 @@ bool PuzzleBox::validGameName(String name)
 {
   return (
   		  name == "maze" ||
-		  name == "snake"
+		  name == "snake" || 
+		  name == "morse"
   		 );
 }
 
@@ -95,9 +97,7 @@ void PuzzleBox::startPuzzle(String name)
 	else if(name == "morse") {
 		curr_puzzle = createMorse();
 	}
-	else {
-		// Handle unknown puzzle name
-	}
+	
 }
 
 void PuzzleBox::cleanupGame()
@@ -150,11 +150,12 @@ Morse* PuzzleBox::createMorse()
 // Main Function
 void PuzzleBox::play()
 {
+	
 	if(!game_running) // No puzzle box & finished final visuals, nothing to do here
 	{
 		return;
 	}
-
+	
 	if(timer->finished()) // Time is up and finished blinking. Can clear all displays and set running to false
 	{
 		cleanupGame();
@@ -198,7 +199,6 @@ void PuzzleBox::play()
 
 	if(puzzles_solved == puzzle_count) // Win logic
 	{
-		Serial.println("Won Game!");
 		if(curr_puzzle != nullptr)
 			delete curr_puzzle;
 		curr_puzzle = nullptr;
@@ -206,7 +206,6 @@ void PuzzleBox::play()
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic
 	{
-		Serial.println("Lost Game!");
 		if(curr_puzzle != nullptr)
 			delete curr_puzzle;
 		curr_puzzle = nullptr;

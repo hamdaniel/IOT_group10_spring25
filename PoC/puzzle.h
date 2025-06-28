@@ -26,6 +26,7 @@ class Puzzle {
 		LedElement* ring;
 		uint32_t ring_color;
 		uint32_t ring_win_color;
+		uint32_t ring_lose_color;
 		
 		puzzle_status status;
 	
@@ -35,7 +36,7 @@ class Puzzle {
 
 		Puzzle(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r) : serialBT(bt), mp3_player(mp3), ring(r),
 																	ring_color(r->generateColor(0,0,10)), ring_win_color(r->generateColor(0,10,0)),
-																	status(not_finished), end_anim_start_time(0) {};
+																	ring_lose_color(r->generateColor(10,0,0)), status(not_finished), end_anim_start_time(0) {};
 		virtual ~Puzzle() {};
 
 		puzzle_status getStatus() const { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };

@@ -1,113 +1,77 @@
 #include "BigBtn.h"
 
-BigBtn::BigBtn() :
-    buttonPin(BIGBTN_PIN),
-    prevState(HIGH),
-    currState(HIGH),
-    pressStartTime(0),
-    lastReleaseTime(0),
-    singlePressDetected(false),
-    doublePressDetected(false),
-    longPressDetected(false),
-    waitingForSecondPress(false)
+const BigBtn::PressType BigBtn::PressTypes[3] = {
+    BigBtn::SINGLE,
+    BigBtn::DOUBLE,
+    BigBtn::LONG
+};
+
+BigBtn::BigBtn()
+    : lastPhysicalState(HIGH),
+      stableState(HIGH),
+      lastDebounceTime(0),
+      pressStartTime(0),
+      lastReleaseTime(0),
+      waitingForSecondClick(false),
+      longPressDetected(false),
+      buttonDown(false),
+      detectedPress(NONE)
 {
-    pinMode(buttonPin, INPUT_PULLUP);
+    pinMode(BIGBTN_PIN, INPUT_PULLUP); // Assumes active-low button
 }
 
-void BigBtn::readInput()
-{
-    prevState = currState;
-    currState = digitalRead(buttonPin);
-
+void BigBtn::update() {
+    bool reading = digitalRead(BIGBTN_PIN);
     unsigned long now = millis();
+    detectedPress = NONE;
 
-    // Detect button press (transition HIGH->LOW)
-    if (prevState == HIGH && currState == LOW) {
-        pressStartTime = now;
-        longPressDetected = false;  // Reset long press flag on new press
+    // Debounce
+    if (reading != lastPhysicalState) {
+        lastDebounceTime = now;
     }
 
-    // Detect button release (LOW->HIGH)
-    if (prevState == LOW && currState == HIGH) {
-        unsigned long pressDuration = now - pressStartTime;
+    if ((now - lastDebounceTime) > debounceDelay) {
+        if (reading != stableState) {
+            stableState = reading;
 
-        // Check long press
-        if (pressDuration >= longPressDuration) {
-            // Long press just ended - keep flag false because isLongPress() returns true only while held
-            longPressDetected = false;
-            singlePressDetected = false;
-            doublePressDetected = false;
-            waitingForSecondPress = false;
-            lastReleaseTime = 0;
-            return;
-        }
-
-        // Short press released - detect single or double press
-        if (waitingForSecondPress) {
-            // If second press within double press interval
-            if (now - lastReleaseTime <= doublePressInterval) {
-                doublePressDetected = true;
-                singlePressDetected = false;
-                waitingForSecondPress = false;
+            if (stableState == LOW) {
+                pressStartTime = now;
+                longPressDetected = false;
+                buttonDown = true;
             } else {
-                // Too late - treat previous as single press, start over
-                singlePressDetected = true;
-                doublePressDetected = false;
-                lastReleaseTime = now;
+                buttonDown = false;
+
+                if (!longPressDetected) {
+                    if (waitingForSecondClick && (now - lastReleaseTime <= doubleClickThreshold)) {
+                        detectedPress = DOUBLE;
+                        waitingForSecondClick = false;
+                    } else {
+                        waitingForSecondClick = true;
+                        lastReleaseTime = now;
+                    }
+                }
+
+                longPressDetected = false;
             }
-        } else {
-            // First press released - wait for second press
-            waitingForSecondPress = true;
-            lastReleaseTime = now;
-            singlePressDetected = false;
-            doublePressDetected = false;
         }
     }
 
-    // Check if double press window expired without second press
-    if (waitingForSecondPress && (now - lastReleaseTime > doublePressInterval)) {
-        singlePressDetected = true;
-        doublePressDetected = false;
-        waitingForSecondPress = false;
-    }
+    lastPhysicalState = reading;
 
-    // Check for long press (button held down long enough)
-    if (currState == LOW && !longPressDetected && (now - pressStartTime >= longPressDuration)) {
+    // Long press detection
+    if (buttonDown && !longPressDetected && (now - pressStartTime >= longPressDuration)) {
+        detectedPress = LONG;
         longPressDetected = true;
-        singlePressDetected = false;
-        doublePressDetected = false;
-        waitingForSecondPress = false;
+        waitingForSecondClick = false;
+    }
+
+    // Single press timeout
+    if (!buttonDown && waitingForSecondClick && (now - lastReleaseTime > doubleClickThreshold)) {
+        detectedPress = SINGLE;
+        waitingForSecondClick = false;
     }
 }
 
-bool BigBtn::isSinglePress()
-{
-    if (singlePressDetected) {
-        singlePressDetected = false; // clear event after reporting
-        return true;
-    }
-    return false;
-}
-
-bool BigBtn::isDoublePress()
-{
-    if (doublePressDetected) {
-        doublePressDetected = false; // clear event after reporting
-        return true;
-    }
-    return false;
-}
-
-bool BigBtn::isLongPress()
-{
-    // Return true while button is held longer than longPressDuration
-    return longPressDetected;
-}
-
-void BigBtn::resetEvents()
-{
-    singlePressDetected = false;
-    doublePressDetected = false;
-    longPressDetected = false;
-    waitingForSecondPress = false;
+BigBtn::PressType BigBtn::getPressType() {
+    return detectedPress;
 }

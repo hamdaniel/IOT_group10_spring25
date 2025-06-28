@@ -201,11 +201,8 @@ void Maze::endAnimation()
   led_matrix->lightPixel(target_pos,target_colors[0]);
   led_matrix->lightPixel(player_pos, player_color);
 
-  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : game_over_color);
+  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : ring_lose_color);
   
-  
-  
-
 }
 
 void Maze::play()

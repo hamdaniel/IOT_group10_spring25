@@ -3,44 +3,41 @@
 
 #include <Arduino.h>
 
+// Define the button pin here
 #define BIGBTN_PIN 27
 
 class BigBtn {
-private:
-    uint8_t buttonPin;
+public:
+    enum PressType {
+        SINGLE,
+        DOUBLE,
+        LONG,
+        NONE
+    };
     
-    // Button states
-    bool prevState;
-    bool currState;
+    static const PressType PressTypes[3];
 
-    // Timing
+    BigBtn(); // Constructor takes no arguments
+
+    void update();
+    PressType getPressType();
+
+private:
+    bool lastPhysicalState;
+    bool stableState;
+    unsigned long lastDebounceTime;
     unsigned long pressStartTime;
     unsigned long lastReleaseTime;
 
-    // Settings (adjustable)
-    const unsigned long longPressDuration = 1000;  // ms
-    const unsigned long doublePressInterval = 400; // ms max between two presses
-    
-    // Event flags
-    bool singlePressDetected;
-    bool doublePressDetected;
+    bool waitingForSecondClick;
     bool longPressDetected;
+    bool buttonDown;
 
-    // Helper
-    bool waitingForSecondPress;
+    static constexpr unsigned long debounceDelay = 30;
+    static constexpr unsigned long longPressDuration = 1000;
+    static constexpr unsigned long doubleClickThreshold = 500;
 
-public:
-    BigBtn();
-    ~BigBtn() = default;
-
-    void readInput();
-    
-    bool isSinglePress();    // Returns true once when a single press is detected
-    bool isDoublePress();    // Returns true once when a double press is detected
-    bool isLongPress();      // Returns true while button held long
-    
-    // Optional: reset events manually
-    void resetEvents();
+    PressType detectedPress;
 };
 
-#endif // BIGBTN_H
+#endif
