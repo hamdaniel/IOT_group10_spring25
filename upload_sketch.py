@@ -33,7 +33,7 @@ def upload_sketch(sketch_dir, port_number, compile_only):
         print(f"Operation failed: {e}")
 
 if __name__ == "__main__":
-    def_dir = "PoC"
+    def_dir = "BombGame"
     parser = argparse.ArgumentParser(description="Compile and upload an Arduino sketch.")
     parser.add_argument("sketch_dir", nargs="?", default=def_dir, help="Path to the sketch directory")
     parser.add_argument("--p", type=int, default=7, help="Port number (e.g., 7 for COM7)")
