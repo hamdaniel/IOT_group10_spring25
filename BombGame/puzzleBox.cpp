@@ -5,8 +5,9 @@
 PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(false),
 											curr_puzzle(nullptr), puzzle_count(0),
 											puzzles_solved(0), strikes(0), pixels(px),
-											matrix(nullptr), strip(nullptr), ring(nullptr), timer(nullptr),
-											mat_btns(nullptr), morse_btn(nullptr), mp3(nullptr), SerialBT(bt)
+											matrix(nullptr), strip(nullptr), ring(nullptr), end_time(0),
+											win_color(px->Color(0,10,0)), lose_color(px->Color(10,0,0)),
+											timer(nullptr),  mat_btns(nullptr), morse_btn(nullptr), mp3(nullptr), SerialBT(bt)
 											
 {	
 	
@@ -18,7 +19,6 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 	strip->clearPixels();
 	ring->clearPixels();
 	
-	strip->lightSolid(strip->generateColor(5,5,5));
 	
 	pixels->show();
 
@@ -28,7 +28,7 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 	timer = new Timer();
 	mp3 = new Mp3Player();
 
-	mp3->setVolume(10);
+	mp3->setVolume(20);
 }
 
 PuzzleBox::~PuzzleBox()
@@ -112,7 +112,8 @@ void PuzzleBox::cleanupGame()
 	if(curr_puzzle != nullptr)
 		delete curr_puzzle;
 	curr_puzzle = nullptr;
-	
+	end_time = 0;
+
 	// Visuals
 	timer->reset();
 	matrix->clearPixels();
@@ -147,6 +148,77 @@ Morse* PuzzleBox::createMorse()
 	return new Morse(SerialBT,mp3,ring,morse_btn,word);
 }
 
+
+bool PuzzleBox::isOver()
+{
+	if(puzzles_solved == puzzle_count) // Win logic. No need to send game_over_w, already sent before
+	{
+		Serial.print("winner ");
+		if(curr_puzzle != nullptr)
+			delete curr_puzzle;
+		curr_puzzle = nullptr;
+	}
+
+	else if(timer->timeIsUp() || strikes == 0) // Lose logic. Need to send game_over_l only if time is up
+	{
+		Serial.print("loser ");
+		if(curr_puzzle != nullptr) // If there is a puzzle, also seeing the puzzle in the app. send message 
+		{
+			SerialBT->println("game_over_l");
+			delete curr_puzzle;
+
+		}
+		curr_puzzle = nullptr;
+	}
+	else
+		return false; // If didn't win or lose, no need to do any end of pbox logic
+
+
+	bool won = (puzzles_solved == puzzle_count);
+	if(end_time != 0)
+	{
+		if(canCleanup())
+		{
+			//Send pbox end message to app and clean up pbox data
+			if(won)
+				SerialBT->println("bomb_over_w");
+			else
+			{
+				if(timer->timeIsUp())
+					SerialBT->println("bomb_over_l_time");
+				else
+					SerialBT->println("bomb_over_l_lives");
+			}
+			
+			cleanupGame();
+		}
+	}
+	else
+	{
+		end_time = millis();
+		
+		// Play correct sound
+		mp3->playFilename(PBOX_WIN_LOSE_SOUND_DIR, won ? PBOX_WIN_SOUND : PBOX_LOSE_SOUND);
+		
+		// Light all LED elements in correct color
+		ring->lightSolid(won ? win_color : lose_color);
+		strip->lightSolid(won ? win_color : lose_color);
+		matrix->lightSolid(won ? win_color : lose_color);
+		
+		// Change what the timer shows
+		timer->interruptTimer(won);
+		
+	}
+	return true;
+}
+	
+
+bool PuzzleBox::canCleanup() const
+{
+	return (puzzles_solved != puzzle_count && timer->finished()) ||
+		   (puzzles_solved == puzzle_count && ((end_time != 0) && (millis() - end_time > PBOX_END_ANIMATION_LENGTH)));
+}
+
 // Main Function
 void PuzzleBox::play()
 {
@@ -155,65 +227,71 @@ void PuzzleBox::play()
 	{
 		return;
 	}
-	
-	
-	if(timer->finished()) // Time is up and finished blinking. Can clear all displays and set running to false
+		
+	if(isOver())
 	{
-		cleanupGame();
+		pixels->show();
 		return;
 	}
 
-	// If any end condition was met, do appropriate logic without playing anything
-	if(puzzles_solved == puzzle_count) // Win logic
-	{
-		Serial.print("\nwinner\n");
-		if(curr_puzzle != nullptr)
-			delete curr_puzzle;
-		curr_puzzle = nullptr;
-	}
-
-	else if(timer->timeIsUp() || strikes == 0) // Lose logic
-	{
-		Serial.print("loser ");
-		if(curr_puzzle != nullptr)
-			delete curr_puzzle;
-		curr_puzzle = nullptr;
-	}
-
 	if(curr_puzzle != nullptr) // There is a puzzle to play, play it
-	{
-		if (!timer->timeIsUp()) 
-        	curr_puzzle->play();
-
-		if(curr_puzzle->canDelete()) // Can delete puzzle
+	{ 
+		curr_puzzle->play();
+		
+		Puzzle::puzzle_status curr_status = curr_puzzle->getStatus();
+		switch (curr_status)
 		{
-			Puzzle::puzzle_status curr_status = curr_puzzle->getStatus();
-			switch (curr_status)
+			case Puzzle::puzzle_status::win:
 			{
-				case Puzzle::puzzle_status::win:
-				{
-					puzzles_solved++;
-					SerialBT->println("game_over_w");
-					break;
-				}
-
-				case Puzzle::puzzle_status::lose:
-				{
-					strikes--;
-					SerialBT->println("game_over_l");
-					break;
-				}
-
-				default:
-					break;
+				puzzles_solved++;
+				SerialBT->println("game_over_w");
+				timer->resume();
+				ring->clearPixels();
+				matrix->clearPixels();
+				delete curr_puzzle;
+				curr_puzzle = nullptr;
+				break;
 			}
-			ring->clearPixels();
-			matrix->clearPixels();
-			delete curr_puzzle;
-			curr_puzzle = nullptr;
-		}
-	}
 
+			case Puzzle::puzzle_status::lose:
+			{
+				strikes--;
+				SerialBT->println("game_over_l");
+				timer->resume();
+				ring->clearPixels();
+				matrix->clearPixels();
+				if(curr_puzzle != nullptr)
+				delete curr_puzzle;
+				curr_puzzle = nullptr;
+				break;
+			}
+
+			case Puzzle::puzzle_status::win_anim:
+			{
+				timer->pause();
+			}
+			
+			case Puzzle::puzzle_status::lose_anim:
+			{
+				timer->pause();
+			}
+
+			default:
+				break;
+		}
+
+	}
+	if(end_time == 0)
+	{
+		//light strip according to puzzles solved and strikes recieved
+		for(int i = 0; i < puzzles_solved; i++)
+			strip->lightPixel(i, win_color);
+		for(int i = puzzles_solved; i < puzzle_count; i++)
+			strip->lightPixel(i, win_color + 2 * lose_color);
+		
+		for(int i = 1; i <= NUM_STRIKES - strikes; i++)
+			strip->lightPixel(-i, lose_color);
+	}
 	
 	pixels->show();	
 

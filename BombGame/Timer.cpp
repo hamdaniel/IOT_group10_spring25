@@ -5,6 +5,8 @@ Timer::Timer() : display(CLK, DIO)
     active = false;
     startTime = 0;
     lastUpdateTime = 0;
+    pausedTimeToElapse = 0;
+    paused = false;
     lastBlinkTime = 0;
     blinking = false;
     blinkCount = 0;
@@ -12,7 +14,6 @@ Timer::Timer() : display(CLK, DIO)
     lastDisplayedSec = -1;
     display.setBrightness(0x0a);
     display.setSegments(blank);
-    //display.showNumberDec(secLeft, true);
     
 }
 Timer::~Timer()
@@ -25,8 +26,9 @@ void Timer::start(int time)
     startTime = millis();
     active = true;
     timeToElapse = time;
-    secLeft = time;
     lastDisplayedSec = timeToElapse;
+    pausedTimeToElapse = 0;
+    paused = false;
     display.showNumberDec(timeToElapse, true, 4);
     lastUpdateTime = 0;
 
@@ -57,7 +59,7 @@ void Timer::updateWrapper(void* timer_instance)
 
 void Timer::update()
 {
-    if (!active)
+    if (!active || paused)
         return;
 
     unsigned long currentMillis = millis();
@@ -126,16 +128,18 @@ bool Timer::finished() const
     return !active && blinkCount >= 5;
 }
 
-void Timer::reset()
+void Timer::reset(bool clear_disp)
 {
     active = false;
     startTime = 0;
     lastUpdateTime = 0;
+    paused = false;
     lastBlinkTime = 0;
     blinking = false;
     blinkCount = 0;
     blinkState = false;
-    display.setSegments(blank);
+    if(clear_disp)
+        display.setSegments(blank);
 
     
     if (taskHandle != nullptr) {
@@ -144,3 +148,35 @@ void Timer::reset()
     }
 }
 
+void Timer::interruptTimer(bool end)
+{
+    if(end)
+	{
+        // Freeze the timer on the current time
+		active = false;
+	}
+	else
+	{
+        // Make the timer blink 0's 
+        reset();
+        start(0);
+	}
+}
+
+void Timer::pause()
+{
+    if(!paused)
+    {
+        paused = true;
+        pausedTimeToElapse = ((timeToElapse * 1000 - (millis()- startTime)) + 999) / 1000;
+    }
+}
+
+void Timer::resume()
+{
+    if(paused)
+    {
+        reset(false);
+        start(pausedTimeToElapse);
+    }
+}

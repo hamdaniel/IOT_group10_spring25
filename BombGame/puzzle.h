@@ -9,15 +9,15 @@
 #include "sound.h"
 #include "ledElement.h"
 
-#define WIN_LOSE_SOUND_DIR 1
-#define WIN_SOUND 1
-#define LOSS_SOUND 2
-#define END_ANIMATION_LENGTH 6000
+#define GAME_WIN_LOSE_SOUND_DIR 1
+#define GAME_WIN_SOUND 1
+#define GAME_LOSE_SOUND 2
+#define GAME_END_ANIMATION_LENGTH 6000
 
 class Puzzle {
 
 	public:
-		enum puzzle_status { not_finished, win, lose};
+		enum puzzle_status { not_finished, win, lose, win_anim, lose_anim};
 		
 	protected:
 		BluetoothSerial* serialBT;
@@ -39,9 +39,9 @@ class Puzzle {
 																	ring_lose_color(r->generateColor(10,0,0)), status(not_finished), end_anim_start_time(0) {};
 		virtual ~Puzzle() {};
 
-		puzzle_status getStatus() const { return (canDelete() ? status : Puzzle::puzzle_status::not_finished); };
+		puzzle_status getStatus() const { return (status); };
 		bool canDelete() const { return ((end_anim_start_time != 0) && 
-														  (millis() - end_anim_start_time > END_ANIMATION_LENGTH)); };
+														  (millis() - end_anim_start_time > GAME_END_ANIMATION_LENGTH)); };
 
 		virtual void play() = 0;
 

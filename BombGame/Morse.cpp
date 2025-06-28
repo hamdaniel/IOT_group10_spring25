@@ -70,7 +70,7 @@ void Morse::checkForInput() {
   	return;
 
   state = MorseState::END_ANIMATION; // If got here the player pressed the button someway, an end animation will play
-  status = (BigBtn::PressTypes[target_val] == press) ? puzzle_status::win : puzzle_status::lose;
+  status = (BigBtn::PressTypes[target_val] == press) ? puzzle_status::win_anim : puzzle_status::lose_anim;
 	
 }
 
@@ -164,16 +164,17 @@ void Morse::endAnimation()
     if(canDelete()) // finished end animation, clear board
     {
       ring->clearPixels();
-	  digitalWrite(MORSE_LED_PIN, LOW);
-	  state = MorseState::DONE;
+      digitalWrite(MORSE_LED_PIN, LOW);
+      state = MorseState::DONE;
+      status = (status == Puzzle::puzzle_status::win_anim ? Puzzle::puzzle_status::win : Puzzle::puzzle_status::lose);
     }
     return;
   }
   
   end_anim_start_time = millis();
-  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
+  mp3_player->playFilename(GAME_WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win_anim ? GAME_WIN_SOUND : GAME_LOSE_SOUND);
 
-  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : ring_lose_color);
+  ring->lightSolid((status == Puzzle::puzzle_status::win_anim) ? ring_win_color : ring_lose_color);
   digitalWrite(MORSE_LED_PIN, HIGH);
   
 }

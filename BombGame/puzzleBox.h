@@ -15,6 +15,11 @@
 #define RING_NUM_PIXELS 16
 #define TOTAL_PIXELS (MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS + RING_NUM_PIXELS)
 
+#define PBOX_WIN_LOSE_SOUND_DIR 3
+#define PBOX_WIN_SOUND 1
+#define PBOX_LOSE_SOUND 2
+#define PBOX_END_ANIMATION_LENGTH 6000
+
 #include "ledMatrix.h"
 #include "ledMatrix.h"
 
@@ -33,6 +38,7 @@
 
 #define NUM_STRIKES 3
 
+
 class PuzzleBox {
 
 	private:
@@ -48,6 +54,10 @@ class PuzzleBox {
 		LedMatrix* matrix;
 		LedElement* strip;
 		LedElement* ring;
+
+		unsigned long end_time;
+		uint32_t win_color;
+		uint32_t lose_color;
 		
 		Timer* timer;
 		// Input
@@ -70,8 +80,10 @@ class PuzzleBox {
 		
 		//Helper Functions
 		String readFromBT();
-		
-		public:
+		bool canCleanup() const;
+		bool isOver();
+
+	public:
 		PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px);
 		~PuzzleBox();
 		

@@ -15,10 +15,11 @@ class Timer{
     private:
         bool active;
         int timeToElapse;
-        int secLeft;
         unsigned long startTime;
         unsigned long lastUpdateTime;
         unsigned long lastBlinkTime;
+        int pausedTimeToElapse;
+        bool paused;
         bool blinking;
         int blinkCount;
         bool blinkState;
@@ -36,10 +37,13 @@ class Timer{
         void start(int time);
         static void updateWrapper(void* timer_instance);
         void update();
-        void reset();
+        void reset(bool clear_disp = true);
 
         bool timeIsUp() const;
         bool finished() const;
+        void interruptTimer(bool end);
+        void pause();
+        void resume();
 
 };
 

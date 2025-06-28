@@ -131,7 +131,7 @@ void Snake::endAnimation()
   // TODO: add something visual
 
   end_anim_start_time = millis();
-  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
+  mp3_player->playFilename(GAME_WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? GAME_WIN_SOUND : GAME_LOSE_SOUND);
 }
 
 

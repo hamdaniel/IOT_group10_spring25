@@ -81,10 +81,6 @@ Maze::Maze(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* lm, UD
   }
 
   maze_start_time = millis();
-  Serial.print("r is: ");
-  Serial.println((uintptr_t)r, HEX);  // prints address in hex
-  Serial.print("ring color is: ");
-  Serial.println(ring_color);
   ring->lightSolid(ring_color);
   Serial.println("initialized Maze!");
 }
@@ -178,17 +174,15 @@ void Maze::endAnimation()
 {
   if(end_anim_start_time != 0) // End animation already started
   {
-    if(canDelete()) // finished end animation, clear board
-    {
-      led_matrix->clearPixels();
-      ring->clearPixels();
-    }
+    if(canDelete()) // finished end animation, change status and pbox will delete
+      status = (status == puzzle_status::win_anim ? puzzle_status::win : puzzle_status::lose);
+      
     return;
   }
   
   end_anim_start_time = millis();
-  mp3_player->playFilename(WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win ? WIN_SOUND : LOSS_SOUND);
-  uint32_t mat_color = (status == Puzzle::puzzle_status::win) ? wall_colors[0] : game_over_color;
+  mp3_player->playFilename(GAME_WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win_anim ? GAME_WIN_SOUND : GAME_LOSE_SOUND);
+  uint32_t mat_color = (status == Puzzle::puzzle_status::win_anim) ? wall_colors[0] : game_over_color;
 
   for(int i = 0; i < ROW_LEN * COL_LEN; i++)
   {
@@ -201,7 +195,7 @@ void Maze::endAnimation()
   led_matrix->lightPixel(target_pos,target_colors[0]);
   led_matrix->lightPixel(player_pos, player_color);
 
-  ring->lightSolid((status == Puzzle::puzzle_status::win) ? ring_win_color : ring_lose_color);
+  ring->lightSolid((status == Puzzle::puzzle_status::win_anim) ? ring_win_color : ring_lose_color);
   
 }
 
@@ -221,25 +215,25 @@ void Maze::play()
 
       if(player_pos == target_pos && now - maze_start_time < time ) // Reached target in time
       {
-        status = Puzzle::puzzle_status::win;
+        status = Puzzle::puzzle_status::win_anim;
         endAnimation();
       }
       
       else if(now - maze_start_time >= time) // Time is up
       {
-        status = Puzzle::puzzle_status::lose;
+        status = Puzzle::puzzle_status::lose_anim;
         endAnimation();
       }
       break;
     }
           
-    case Puzzle::puzzle_status::win:
+    case Puzzle::puzzle_status::win_anim:
     {
       endAnimation();
       break;
     }
 
-    case Puzzle::puzzle_status::lose:
+    case Puzzle::puzzle_status::lose_anim:
     {
       endAnimation();
       break;
