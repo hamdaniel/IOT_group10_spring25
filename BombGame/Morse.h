@@ -11,7 +11,7 @@
 #include "puzzle.h"
 #include "BigBtn.h"
 
-#define MORSE_LED_PIN 4
+#define MORSE_LED_PIN 5
 
 class Morse : public Puzzle {
 private:

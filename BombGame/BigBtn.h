@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Define the button pin here
-#define BIGBTN_PIN 27
+#define BIGBTN_PIN 18
 
 class BigBtn {
 public:

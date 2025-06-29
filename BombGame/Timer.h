@@ -6,8 +6,8 @@
 #include <TM1637Display.h>
 
 // Module connection pins (Digital Pins)
-#define CLK 19
-#define DIO 18
+#define CLK 26
+#define DIO 27
 
 #define TEST_DELAY   1000
 

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #define U_PIN             23
-#define D_PIN             5
+#define D_PIN             19
 #define R_PIN             25
 #define L_PIN             33
 

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #define TX_PIN 25
-#define RX_PIN 26
+#define RX_PIN 4
 #define MP3_BAUD 9600
 
 class Mp3Player {
