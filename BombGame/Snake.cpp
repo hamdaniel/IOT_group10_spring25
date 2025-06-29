@@ -121,14 +121,7 @@ int Snake::calculate_position(int x, int y){
 void Snake::draw() {
     led_matrix->clearPixels();
 
-    // Always draw the head in blue
-    if (segments_to_draw > 0) {
-        int pos = calculate_position(snake_pos[0][0], snake_pos[0][1]);
-        uint32_t head_color = led_matrix->generateColor(0, 0, 10); // Always blue
-        led_matrix->lightPixel(pos, head_color);
-    }
-
-    // Draw body (blink red during lose animation)
+        // Draw body (blink red during lose animation)
     for (int i = 1; i < segments_to_draw; i++) {
         if (status == Puzzle::puzzle_status::lose_anim && !blink_state)
             continue; // Skip blinking off
@@ -141,6 +134,13 @@ void Snake::draw() {
         led_matrix->lightPixel(pos, body_color);
     }
 
+    // Always draw the head in blue and last
+    if (segments_to_draw > 0) {
+        int pos = calculate_position(snake_pos[0][0], snake_pos[0][1]);
+        uint32_t head_color = led_matrix->generateColor(0, 0, 10); // Always blue
+        led_matrix->lightPixel(pos, head_color);
+    }
+    
     if (status != Puzzle::puzzle_status::not_finished)
         return;
 
