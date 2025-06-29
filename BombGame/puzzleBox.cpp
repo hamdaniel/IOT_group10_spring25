@@ -7,10 +7,13 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 											puzzles_solved(0), strikes(0), pixels(px),
 											matrix(nullptr), strip(nullptr), ring(nullptr), end_time(0),
 											win_color(px->Color(0,10,0)), lose_color(px->Color(10,0,0)),
-											timer(nullptr),  mat_btns(nullptr), morse_btn(nullptr), mp3(nullptr), SerialBT(bt)
+											timer(nullptr),  mat_btns(nullptr), morse_btn(nullptr),
+											outputExpander(nullptr), inputExpander(nullptr),
+											mp3(nullptr), SerialBT(bt)
 											
 {	
-	
+	pinMode(MORSE_LED_PIN, OUTPUT);
+	digitalWrite(MORSE_LED_PIN, LOW);
 	matrix = new LedMatrix(pixels, 0, MATRIX_NUM_PIXELS);
 	strip = new LedElement(pixels, MATRIX_NUM_PIXELS, STRIP_NUM_PIXELS);
 	ring = new LedElement(pixels, MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS, RING_NUM_PIXELS);
@@ -18,17 +21,25 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 	matrix->clearPixels();
 	strip->clearPixels();
 	ring->clearPixels();
-	
-	
+
+	outputExpander = new PCF8574(0x20);
+	inputExpander = new PCF8574(0x21);
+	Wire.begin(SDA_PIN, SCL_PIN);
+    outputExpander->begin();
+    inputExpander->begin();
+    pinMode(WIRE_BTN_PIN, INPUT_PULLUP);
+
 	pixels->show();
 
 	mat_btns = new UDRLInput();
 	morse_btn = new BigBtn();
 
+
 	timer = new Timer();
 	mp3 = new Mp3Player();
+	mp3->setVolume(5);
 
-	mp3->setVolume(20);
+	Serial.println("PuzzleBox C'tor complete!");
 }
 
 PuzzleBox::~PuzzleBox()
@@ -55,6 +66,7 @@ PuzzleBox::~PuzzleBox()
 }
 
 void PuzzleBox::startGame(int num_puzzles) {
+	Serial.println("Starting PuzzleBox, cleaning up");
 	// First, clear up any previous game
 	cleanupGame();
 
@@ -81,7 +93,8 @@ bool PuzzleBox::validGameName(String name)
   return (
   		  name == "maze" ||
 		  name == "snake" || 
-		  name == "morse"
+		  name == "morse" || 
+		  name == "wires"
   		 );
 }
 
@@ -97,12 +110,15 @@ void PuzzleBox::startPuzzle(String name)
 	else if(name == "morse") {
 		curr_puzzle = createMorse();
 	}
+	else if(name == "wires") {
+		curr_puzzle = createWires();
+	}
 	
 }
 
 void PuzzleBox::cleanupGame()
 {
-	Serial.println("Stopping puzzle box");
+	Serial.println("Cleaning up");
 
 	// PuzzleBox Data
 	game_running = false;
@@ -113,13 +129,17 @@ void PuzzleBox::cleanupGame()
 		delete curr_puzzle;
 	curr_puzzle = nullptr;
 	end_time = 0;
-
+		
 	// Visuals
+	digitalWrite(MORSE_LED_PIN, LOW);
+	
 	timer->reset();
 	matrix->clearPixels();
 	strip->clearPixels();
 	ring->clearPixels();
 	pixels->show();
+	Serial.println("Finished Cleanup");
+
 }
 
 Maze* PuzzleBox::createMaze()
@@ -148,6 +168,14 @@ Morse* PuzzleBox::createMorse()
 	return new Morse(SerialBT,mp3,ring,morse_btn,word);
 }
 
+Wires* PuzzleBox::createWires()
+{
+	int num_wires = readFromBT().toInt();
+	int attempts = readFromBT().toInt();
+	Serial.printf("Creating Wires with: %d wires and %d attempts\n",num_wires, attempts);
+	return new Wires(SerialBT, mp3, ring, inputExpander, outputExpander, num_wires, attempts);
+	
+}
 
 bool PuzzleBox::isOver()
 {
@@ -187,7 +215,10 @@ bool PuzzleBox::isOver()
 				if(timer->timeIsUp())
 					SerialBT->println("bomb_over_l_time");
 				else
+				{
+					SerialBT->println("game_over_l");
 					SerialBT->println("bomb_over_l_lives");
+				}
 			}
 			
 			cleanupGame();
@@ -207,6 +238,8 @@ bool PuzzleBox::isOver()
 		
 		// Change what the timer shows
 		timer->interruptTimer(won);
+
+		digitalWrite(MORSE_LED_PIN, HIGH);
 		
 	}
 	return true;
@@ -256,7 +289,8 @@ void PuzzleBox::play()
 			case Puzzle::puzzle_status::lose:
 			{
 				strikes--;
-				SerialBT->println("game_over_l");
+				if(strikes)
+					SerialBT->println("game_over_l");
 				timer->resume();
 				ring->clearPixels();
 				matrix->clearPixels();

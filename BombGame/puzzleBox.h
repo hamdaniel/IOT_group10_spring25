@@ -4,8 +4,10 @@
 #include <Arduino.h>
 #include "BluetoothSerial.h"
 #include <stdlib.h>
-
+#include <PCF8574.h>
+#include <Wire.h> 
 #include <Adafruit_NeoPixel.h>
+
 #ifdef __AVR__
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
@@ -35,6 +37,7 @@
 #include "Snake.h"
 
 #include "Morse.h"
+#include "Wires.h"
 
 #define NUM_STRIKES 3
 
@@ -64,6 +67,9 @@ class PuzzleBox {
 		UDRLInput* mat_btns;
 		BigBtn* morse_btn;
 
+		PCF8574* outputExpander;
+		PCF8574* inputExpander;
+
 		// Audio
 		Mp3Player* mp3;
 
@@ -77,6 +83,7 @@ class PuzzleBox {
 
 
 		Morse* createMorse();
+		Wires* createWires();
 		
 		//Helper Functions
 		String readFromBT();
