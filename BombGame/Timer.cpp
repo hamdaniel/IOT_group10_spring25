@@ -1,17 +1,12 @@
 #include "Timer.h"
 
-Timer::Timer() : display(CLK, DIO)
+Timer::Timer() : active(false), timeToElapse(0),
+                 startTime(0), lastUpdateTime(0), lastBlinkTime(0),
+                 pausedTimeToElapse(0), paused(false), blinking(false),
+                 blinkCount(0), blinkState(false), lastDisplayedSec(-1),
+                 taskHandle(nullptr), display(CLK, DIO)
 {
-    active = false;
-    startTime = 0;
-    lastUpdateTime = 0;
-    pausedTimeToElapse = 0;
-    paused = false;
-    lastBlinkTime = 0;
-    blinking = false;
-    blinkCount = 0;
-    blinkState = false;
-    lastDisplayedSec = -1;
+    
     display.setBrightness(0x0a);
     display.setSegments(blank);
     
