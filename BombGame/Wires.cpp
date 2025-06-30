@@ -238,12 +238,9 @@ void Wires::analyzeDetectedConnections() {
 
 		if(!left_attempts)
 			status = Puzzle::puzzle_status::lose_anim;
+			
 		else
-		{
-			serialBT->printf("%d", perfect);
-			serialBT->printf("%d", leftCorrectRightNot);
-			serialBT->printf("%d", rightCorrectLeftNot);
-		}
+			serialBT->println(String(perfect) + "," + String(leftCorrectRightNot) + "," + String(rightCorrectLeftNot));
 	}
 }
 
