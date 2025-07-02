@@ -33,7 +33,7 @@
 
 #include "maze.h"    
 #include "Snake.h"
-
+#include "Symbols.h"
 #include "Morse.h"
 
 #define NUM_STRIKES 3
@@ -74,9 +74,8 @@ class PuzzleBox {
 		// Puzzle creators
 		Maze* createMaze();
 		Snake* createSnake();
-
-
 		Morse* createMorse();
+		Symbol* handleSymbol();
 		
 		//Helper Functions
 		String readFromBT();

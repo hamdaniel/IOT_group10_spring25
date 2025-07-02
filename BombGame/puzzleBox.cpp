@@ -81,7 +81,8 @@ bool PuzzleBox::validGameName(String name)
   return (
   		  name == "maze" ||
 		  name == "snake" || 
-		  name == "morse"
+		  name == "morse" ||
+		  name == "symbol"
   		 );
 }
 
@@ -96,6 +97,12 @@ void PuzzleBox::startPuzzle(String name)
 	}
 	else if(name == "morse") {
 		curr_puzzle = createMorse();
+	}
+	else if(name == "symbol") {
+		curr_puzzle = handleSymbol();
+	}
+	else {
+		Serial.println("Invalid puzzle name: " + name);
 	}
 	
 }
@@ -148,6 +155,41 @@ Morse* PuzzleBox::createMorse()
 	return new Morse(SerialBT,mp3,ring,morse_btn,word);
 }
 
+Symbol* PuzzleBox::handleSymbol()
+{
+	String type = readFromBT();
+	if (type=="init"){
+		//time, amount of symbols, and the permutation of the symbols 
+		String time = readFromBT(); //time for solving
+		//convert time to int
+		int time_int = time.toInt() * 1000; // convert to milliseconds
+		Serial.println("Creating Symbol with time: " + time_int);
+		String num_symbols = readFromBT();
+		int num_symbols_int = num_symbols.toInt();
+		Serial.println("Creating Symbol with num_symbols: " + num_symbols);
+	
+		String Symbols[3] = {"0", "0", "0"}; // 3 symbols max, each one is 
+		for (int i=0; i < num_symbols_int; i++)
+		{
+			Symbols[i] = readFromBT();
+			Serial.println("Got Symbol: " + Symbols[i]);
+		}
+		return new Symbol(SerialBT, mp3, ring, matrix, mat_btns, Symbols, num_symbols_int, time_int);
+	}
+	else if (type=="pass"){
+		Serial.println("Proceeding to next symbol!");
+		Symbol* symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(true); // Proceed to next symbol
+		
+	}
+	else if (type=="fail"){
+		Serial.println("Ending game!");
+		Symbol* symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(false); // Proceed to next symbol
+	}
+	
+	
+}
 
 bool PuzzleBox::isOver()
 {
