@@ -37,7 +37,7 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 
 	timer = new Timer();
 	mp3 = new Mp3Player();
-	mp3->setVolume(20);
+	mp3->setVolume(5);
 
 	Serial.println("PuzzleBox C'tor complete!");
 }
@@ -94,7 +94,8 @@ bool PuzzleBox::validGameName(String name)
   		  name == "maze" ||
 		  name == "snake" || 
 		  name == "morse" ||
-		  name == "wires"
+		  name == "wires" ||
+		  name == "symbol"
   		 );
 }
 
@@ -177,6 +178,7 @@ Morse* PuzzleBox::createMorse()
 
 Symbol* PuzzleBox::handleSymbol()
 {
+	Symbol* symbol = nullptr;
 	String type = readFromBT();
 	if (type=="init"){
 		//time, amount of symbols, and the permutation of the symbols 
@@ -198,17 +200,17 @@ Symbol* PuzzleBox::handleSymbol()
 	}
 	else if (type=="pass"){
 		Serial.println("Proceeding to next symbol!");
-		Symbol* symbol = static_cast<Symbol*>(curr_puzzle);
-		symbol->Proceed(true); // Proceed to next symbol
+		symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(1); // Proceed to next symbol
 		
 	}
 	else if (type=="fail"){
 		Serial.println("Ending game!");
-		Symbol* symbol = static_cast<Symbol*>(curr_puzzle);
-		symbol->Proceed(false); // Proceed to next symbol
+		symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(0); // Proceed to next symbol
 	}
 	
-	
+	return symbol; // Return the current puzzle, which is a Symbol puzzle
 }
 
 Wires* PuzzleBox::createWires()

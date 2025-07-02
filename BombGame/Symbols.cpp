@@ -37,7 +37,6 @@ void Symbol::init_symbol_positions(String* input) {
 }
 
 void Symbol::draw() {
-    led_matrix->clearPixels();
     //Draw the fraction in the ring:
     int time_elapsed = millis() - time_started;
     double frac = (double)time_elapsed / time_to_finish;
@@ -81,12 +80,12 @@ Symbol::~Symbol() {
     // Destructor logic if needed
 }
 
-void Symbol::Proceed(bool isNext) {
+void Symbol::Proceed(int isNext) {
     Serial.println("Proceeding...");
-    if (isNext) {
+    if (isNext==1) {
         //print values of current_symbol and max_symbol
         Serial.println("Current symbol: " + String(current_symbol) + ", Max symbol: " + String(max_symbol));
-        if(current_symbol < max_symbol) {
+        if(current_symbol < max_symbol-1) {
             current_symbol +=1;
             Serial.println("Current symbol: " + String(current_symbol) + ", Max symbol: " + String(max_symbol));
         }
@@ -96,6 +95,7 @@ void Symbol::Proceed(bool isNext) {
         }
     }
     else {
+        Serial.println("Failed to proceed, current symbol: " + String(current_symbol) + ", Max symbol: " + String(max_symbol));
         //Lost:
         status = Puzzle::puzzle_status::lose_anim;
     }
@@ -103,9 +103,26 @@ void Symbol::Proceed(bool isNext) {
 }
 
 void Symbol::endAnimation() {
-    led_matrix->clearPixels();
-    ring->clearPixels();
+    if(end_anim_start_time != 0) // End animation already started
+    {
+        if(canDelete()) // finished end animation, change status and pbox will delete
+            status = (status == puzzle_status::win_anim ? puzzle_status::win : puzzle_status::lose);
+        
+        return;
+    }
+    end_anim_start_time = millis(); // Start the end animation
     ring->lightSolid((status == Puzzle::puzzle_status::win_anim) ? ring_win_color : ring_lose_color);
+    mp3_player->playFilename(GAME_WIN_LOSE_SOUND_DIR, status == Puzzle::puzzle_status::win_anim ? GAME_WIN_SOUND : GAME_LOSE_SOUND);
+    // Show the symbols on the matrix
+    // Light the matrix with the right color, if won, light the current symbol with the winning color, else light it with the losing color
+    uintptr_t color = (status == Puzzle::puzzle_status::win_anim) ? led_matrix->generateColor(0, 10, 0) : led_matrix->generateColor(10, 0, 0);
+    for (int i = 0; i < ROW_LEN * COL_LEN; i++) {
+        if (Symbols[current_symbol][i]) {
+            led_matrix->lightPixel(i, color); // Light the current symbol with the right color
+        }
+    }
+
+
 }
 
 void Symbol::play() {
@@ -120,6 +137,7 @@ void Symbol::play() {
             // Time is up, lose the puzzle
             status = Puzzle::puzzle_status::lose_anim;
         }
+        Serial.println("Playing Symbol puzzle, symbol num " + String(current_symbol));
         draw();
     }
     // Handle end animation

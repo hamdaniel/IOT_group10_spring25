@@ -34,7 +34,7 @@ class Symbol : public MatrixPuzzle {
     public:
         Symbol(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, LedMatrix* lm, UDRLInput* bs, String * input, int numSymbols, int timeToFinish);
         ~Symbol();
-        void Proceed(bool isNext);
+        void Proceed(int isNext);
         void play() override;
 };
 
