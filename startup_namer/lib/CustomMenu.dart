@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'Maze/Maze.dart';
 import 'dart:typed_data';
 import 'GameInProgress.dart';
 import 'Snake/SnakeSettingsScreen.dart';
 import 'Maze/MazeSettingsScreen.dart';
 import 'Morse/MorseSettingsScreen.dart';
+import 'Symbol/SymbolSettingsScreen.dart';
+import 'Wires/WiresSettingsScreen.dart';
 
 class CustomGameMenu extends StatefulWidget {
   final String status;
@@ -22,13 +23,16 @@ class CustomGameMenu extends StatefulWidget {
 
 class _CustomGameMenuState extends State<CustomGameMenu> {
   final List<String> selectedGames = [];
-  double _gameTimeMinutes = 0.5;
+  double _gameTimeMinutes = 5.0;
   int? mazeTime = 90;
   int? mazeVision = 1;
   int? snakeScoreToBeat = 20;
   double? snakeSpeed = 1.0;
   int? morseWordLength = 4;
-
+  int? symbolTime = 45;
+  int? symbolLevels = 1;
+  int? wiresAttempts = 10;
+  int ?wiresNumber = 5;
   void _onGameTap(String game) async {
     if (selectedGames.contains(game)) {
       setState(() {
@@ -70,13 +74,22 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
         });
       }
     } else if (game == "wires") {
-      setState(() {
-        selectedGames.add(game);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Wires game coming soon!')),
+      final result = await Navigator.push<Map<String, int>>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WiresSettingsScreen(),
+        ),
       );
-    } else if (game == "morse") {
+      if (result != null) {
+        setState(() {
+          if (!selectedGames.contains("wires")) {
+            selectedGames.add("wires");
+          }
+          wiresAttempts = result['attempts'];
+          wiresNumber = result['number'];
+        });
+      }
+    }else if (game == "morse") {
       final result = await Navigator.push<Map<String, int>>(
         context,
         MaterialPageRoute(
@@ -89,6 +102,22 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
             selectedGames.add("morse");
           }
           morseWordLength = result['wordLength'];
+        });
+      }
+    } else if (game == "symbol") {
+      final result = await Navigator.push<Map<String, int>>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SymbolSettingsScreen(),
+        ),
+      );
+      if (result != null) {
+        setState(() {
+          if (!selectedGames.contains("symbol")) {
+            selectedGames.add("symbol");
+          }
+          symbolTime = result['time'];
+          symbolLevels = result['levels'];
         });
       }
     }
@@ -125,6 +154,11 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           mazeVision: mazeVision ?? 1,
           snakeScoreToBeat: snakeScoreToBeat ?? 100,
           snakeSpeed: snakeSpeed ?? 1.0,
+          morseWordLength: morseWordLength ?? 4,
+          symbolTime: symbolTime ?? 45,
+          symbolLevels: symbolLevels ?? 1,
+          wiresAttempts: wiresAttempts ?? 10,
+          wiresNumber: wiresNumber ?? 5,
         ),
       ),
     );
@@ -139,9 +173,14 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
       case "morse":
         return "Decode the Morse code shown on the LED and unscramble the letters to form a real word. Then, for a word of length n with letters l₁, l₂, ..., lₙ (where lᵢ is the alphabetical position of the i-th letter), calculate the sum:\n\nS = 1×l₁ + 2×l₂ + ... + n×lₙ = ∑ᵢ₌₁ⁿ (i × lᵢ)\n\nThen, compute S mod 3:\n0: 1 long press on the button\n1: 1 short press on the button\n2: 2 short presses on the button";
       case "wires":
-        return "Wires game coming soon!";
+        return "In this game you have to figure out how to connect the wires the right way. After every attempt you will be told:\n"
+               "- How many wires you placed perfectly\n"
+               "- How many wires were connected to a correct pin on the right (but not on the left)\n"
+               "- How many were connected to the correct pin on the left (but not on the right)";
+      case "symbol":
+        return "At the start of the game, a picture is shown on the ESP32, but it is split into 4 pieces and the pieces are shuffled in random order. On the application, you must choose the correct symbol that matches the original picture.";
       default:
-        return "The game is $key";
+        return "No description available for this game.";
     }
   }
 
@@ -151,6 +190,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
     final snakeImage = 'assets/snake.png';
     final wiresImage = 'assets/wires.png';
     final morseImage = 'assets/morse.png';
+    final symbolImage = 'assets/symbol.png';
 
     Widget gameTile(String label, String asset, String key) {
       final isSelected = selectedGames.contains(key);
@@ -202,7 +242,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
                             title: Text("Game Info"),
                             content: Text(
                               getGameDescription(key),
-                              style: TextStyle(fontSize: 15), // Smaller text
+                              style: TextStyle(fontSize: 15),
                             ),
                             actions: [
                               TextButton(
@@ -322,6 +362,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
                         gameTile("Snake", snakeImage, "snake"),
                         gameTile("Wires", wiresImage, "wires"),
                         gameTile("Morse Code", morseImage, "morse"),
+                        gameTile("Symbol", symbolImage, "symbol"), // <-- Add Symbol tile
                       ],
                     ),
                     SizedBox(height: 40),
@@ -347,8 +388,15 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
                       ),
                     ),
                     SizedBox(height: 8),
-                    TextButton(
-                      child: Text("Back", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      label: Text("Back", style: TextStyle(fontSize: 18, color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],

@@ -3,9 +3,7 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-
-Stream<Uint8List>? globalInputBroadcast;
-
+import '../globals.dart';
 class CompassDialog extends StatefulWidget {
   final BluetoothConnection? connection;
   final Point<int> start;

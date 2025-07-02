@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-class MorseSettingsScreen extends StatefulWidget {
+class WiresSettingsScreen extends StatefulWidget {
   @override
-  State<MorseSettingsScreen> createState() => _MorseSettingsScreenState();
+  State<WiresSettingsScreen> createState() => _WiresSettingsScreenState();
 }
 
-class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
-  int wordLength = 4;
+class _WiresSettingsScreenState extends State<WiresSettingsScreen> {
+  int attempts = 10;
+  int number = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Morse Code Settings",
+                    "Wires Game Settings",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -46,17 +47,36 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                     ),
                   ),
                   SizedBox(height: 32),
-                  Text("Word Length: $wordLength",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(
+                    "Attempts: $attempts",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                   Slider(
-                    value: wordLength.toDouble(),
-                    min: 3,
-                    max: 6,
-                    divisions: 3,
-                    label: wordLength.toString(),
+                    value: attempts.toDouble(),
+                    min: 8,
+                    max: 12,
+                    divisions: 4,
+                    label: attempts.toString(),
                     onChanged: (val) {
                       setState(() {
-                        wordLength = val.round();
+                        attempts = val.round();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 30),
+                  Text(
+                    "Number of wires: $number",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  Slider(
+                    value: number.toDouble(),
+                    min: 4,
+                    max: 6,
+                    divisions: 2,
+                    label: number.toString(),
+                    onChanged: (val) {
+                      setState(() {
+                        number = val.round();
                       });
                     },
                   ),
@@ -74,7 +94,7 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                             padding: EdgeInsets.symmetric(horizontal: 0, vertical: 16),
                           ),
                           onPressed: () {
-                            Navigator.pop(context, {'wordLength': wordLength});
+                            Navigator.pop(context, {'attempts': attempts, 'number': number});
                           },
                         ),
                       ),

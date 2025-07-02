@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import '../globals.dart';
+
 
 Future<String> startMorseGame({
   required BuildContext menuContext,
@@ -9,7 +11,7 @@ Future<String> startMorseGame({
   required int wordLength,
 }) async {
   final List<String> morseWords = [
-    "jam", "vet", "mud", "jump", "blitz", "crisp", "whisk", "plumb", "drink", "brick",
+    "jam", "vet", "mud", "jump","wolf","bulb","jerk","quiz", "blitz", "crisp", "whisk", "plumb", "drink", "brick",
     "lunch", "grind", "proud", "frown", "glove", "march", "squid", "planet", "injury", "blaze"
   ];
   final filtered = morseWords.where((w) => w.length == wordLength).toList();
@@ -38,7 +40,7 @@ class MorseWaitScreen extends StatefulWidget {
 }
 
 class _MorseWaitScreenState extends State<MorseWaitScreen> {
-  StreamSubscription? _sub;
+  StreamSubscription<Uint8List>? _morseSubscription;
 
   static const Map<String, String> morseMap = {
     'A': '.-',    'B': '-...',  'C': '-.-.',  'D': '-..',   'E': '.',
@@ -52,13 +54,19 @@ class _MorseWaitScreenState extends State<MorseWaitScreen> {
   @override
   void initState() {
     super.initState();
-    _sub = widget.connection?.input?.listen((Uint8List data) {
+    // Set up the global broadcast stream only once per connection
+    if (widget.connection?.input != null && globalInputBroadcast == null) {
+      globalInputBroadcast = widget.connection!.input!.asBroadcastStream();
+    }
+    _listenForGameResult();
+  }
+
+  void _listenForGameResult() {
+    _morseSubscription = globalInputBroadcast?.listen((Uint8List data) {
       final msg = String.fromCharCodes(data).trim();
       if (msg == "game_over_w") {
-        _sub?.cancel();
         Navigator.of(context).pop("win");
       } else if (msg == "game_over_l") {
-        _sub?.cancel();
         Navigator.of(context).pop("lose");
       }
     });
@@ -66,7 +74,7 @@ class _MorseWaitScreenState extends State<MorseWaitScreen> {
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _morseSubscription?.cancel();
     super.dispose();
   }
 

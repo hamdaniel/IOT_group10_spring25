@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
-import 'Maze/Maze.dart';
 import 'CustomMenu.dart';
+
 
 void main() => runApp(MaterialApp(
   debugShowCheckedModeBanner: false,

@@ -1,28 +1,39 @@
+import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'Maze/Maze.dart';
 import 'Snake/Snake.dart';
 import 'Morse/Morse.dart';
+import 'Symbol/Symbol.dart';
+import 'Wires/Wires.dart'; 
+import '../globals.dart';
 
 class GameSelectionScreen extends StatefulWidget {
   final List<String> selectedGames;
   final BluetoothConnection? connection;
   final int mazeTime;
   final int mazeVision;
-  final List<List<int>>? maze;
   final int snakeScoreToBeat;
   final double snakeSpeed;
   final int morseWordLength;
+  final int? symbolTime;
+  final int? symbolLevels;
+  final int? wiresAttempts;
+  final int? wiresNumber;
 
   const GameSelectionScreen({
     required this.selectedGames,
     required this.connection,
-    this.mazeTime = 90,
-    this.mazeVision = 1,
-    this.maze,
-    this.snakeScoreToBeat = 20,
-    this.snakeSpeed = 1,
-    this.morseWordLength = 4,
+    required this.mazeTime,
+    required this.mazeVision,
+    required this.snakeScoreToBeat,
+    required this.snakeSpeed,
+    required this.morseWordLength,
+    this.symbolTime,
+    this.symbolLevels,
+    this.wiresAttempts,
+    this.wiresNumber,
   });
 
   @override
@@ -31,6 +42,69 @@ class GameSelectionScreen extends StatefulWidget {
 
 class _GameSelectionScreenState extends State<GameSelectionScreen> {
   Set<String> completedGames = {};
+  StreamSubscription<Uint8List>? _bombSubscription;
+  bool _bombDialogShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set up the global broadcast stream only once per connection
+    if (widget.connection?.input != null && globalInputBroadcast == null) {
+      globalInputBroadcast = widget.connection!.input!.asBroadcastStream();
+    }
+    _listenForBombOver();
+  }
+
+  void _listenForBombOver() {
+    _bombSubscription = globalInputBroadcast?.listen((Uint8List data) {
+      String msg = String.fromCharCodes(data).trim();
+      if (_bombDialogShown) return;
+      if (msg == "bomb_over_w") {
+        _bombDialogShown = true;
+        _showBombDialog(
+          "Congratulations!",
+          "You finished all the puzzles and won!",
+        );
+      } else if (msg == "bomb_over_l_lives") {
+        _bombDialogShown = true;
+        _showBombDialog(
+          "Out of Lives",
+          "You ran out of lives!",
+        );
+      } else if (msg == "bomb_over_l_time") {
+        _bombDialogShown = true;
+        _showBombDialog(
+          "Out of Time",
+          "You ran out of time!",
+        );
+      }
+    });
+  }
+
+  void _showBombDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: Text("Return to Menu"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _bombSubscription?.cancel();
+    super.dispose();
+  }
 
   String getGameDescription(String key) {
     switch (key) {
@@ -41,7 +115,12 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
       case "morse":
         return "Decode the Morse code shown on the LED and unscramble the letters to form a real word. Then, for a word of length n with letters l₁, l₂, ..., lₙ (where lᵢ is the alphabetical position of the i-th letter), calculate the sum:\n\nS = 1×l₁ + 2×l₂ + ... + n×lₙ = ∑ᵢ₌₁ⁿ (i × lᵢ)\n\nThen, compute S mod 3:\n0: 1 long press on the button\n1: 1 short press on the button\n2: 2 short presses on the button";
       case "wires":
-        return "Wires game coming soon!";
+        return "In this game you have to figure out how to connect the wires the right way. After every attempt you will be told:\n"
+               "- How many wires you placed perfectly\n"
+               "- How many wires were connected to a correct pin on the right (but not on the left)\n"
+               "- How many were connected to the correct pin on the left (but not on the right)";
+      case "symbol":
+        return "At the start of the game, a picture is shown on the ESP32, but it is split into 4 pieces and the pieces are shuffled in random order. On the application, you must choose the correct symbol that matches the original picture.";
       default:
         return "The game is $key";
     }
@@ -77,6 +156,26 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
       setState(() {
         if (result == "win") completedGames.add(game);
       });
+    } else if (game == "symbol") {
+      final result = await startSymbolGame(
+        menuContext: context,
+        connection: widget.connection,
+        time: widget.symbolTime ?? 45,
+        levels: widget.symbolLevels ?? 1,
+      );
+      setState(() {
+        if (result == "win") completedGames.add(game);
+      });
+    } else if (game == "wires") {
+      final result = await startWiresGame(
+        menuContext: context,
+        connection: widget.connection,
+        attempts: widget.wiresAttempts ?? 10,
+        number: widget.wiresNumber ?? 5,
+      );
+      setState(() {
+        if (result == "win") completedGames.add(game);
+      });
     } else {
       await showDialog(
         context: context,
@@ -101,6 +200,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
       "snake": 'assets/snake.png',
       "wires": 'assets/wires.png',
       "morse": 'assets/morse.png',
+      "symbol": 'assets/symbol.png',
     };
 
     return WillPopScope(
@@ -233,6 +333,21 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
                       ],
                     ),
                   ),
+                SizedBox(height: 32),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.exit_to_app, color: Colors.white),
+                  label: Text("Exit to Main Menu", style: TextStyle(fontSize: 18, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 219, 95, 95),
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  onPressed: () {
+                    widget.connection?.output.add(Uint8List.fromList("exit\n".codeUnits));
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                ),
               ],
             ),
           ),

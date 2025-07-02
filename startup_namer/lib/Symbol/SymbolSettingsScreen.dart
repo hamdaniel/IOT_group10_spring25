@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
-class MorseSettingsScreen extends StatefulWidget {
+class SymbolSettingsScreen extends StatefulWidget {
   @override
-  State<MorseSettingsScreen> createState() => _MorseSettingsScreenState();
+  State<SymbolSettingsScreen> createState() => _SymbolSettingsScreenState();
 }
 
-class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
-  int wordLength = 4;
+class _SymbolSettingsScreenState extends State<SymbolSettingsScreen> {
+  int time = 45;
+  int levels = 1;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Custom gradient background
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -30,7 +32,7 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Morse Code Settings",
+                    "Symbol Game Settings",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -46,17 +48,36 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                     ),
                   ),
                   SizedBox(height: 32),
-                  Text("Word Length: $wordLength",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(
+                    "Time to complete level: $time seconds",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                   Slider(
-                    value: wordLength.toDouble(),
-                    min: 3,
-                    max: 6,
-                    divisions: 3,
-                    label: wordLength.toString(),
+                    value: time.toDouble(),
+                    min: 30,
+                    max: 90,
+                    divisions: 60,
+                    label: time.toString(),
                     onChanged: (val) {
                       setState(() {
-                        wordLength = val.round();
+                        time = val.round();
+                      });
+                    },
+                  ),
+                  SizedBox(height: 30),
+                  Text(
+                    "Amount of levels: $levels",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  Slider(
+                    value: levels.toDouble(),
+                    min: 1,
+                    max: 3,
+                    divisions: 2,
+                    label: levels.toString(),
+                    onChanged: (val) {
+                      setState(() {
+                        levels = val.round();
                       });
                     },
                   ),
@@ -74,7 +95,7 @@ class _MorseSettingsScreenState extends State<MorseSettingsScreen> {
                             padding: EdgeInsets.symmetric(horizontal: 0, vertical: 16),
                           ),
                           onPressed: () {
-                            Navigator.pop(context, {'wordLength': wordLength});
+                            Navigator.pop(context, {'time': time, 'levels': levels});
                           },
                         ),
                       ),

@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-
-import '../Maze/MazeCompass.dart';
+import '../globals.dart';
 
 class SnakeMatrixDialog extends StatefulWidget {
   final BluetoothConnection? connection;
