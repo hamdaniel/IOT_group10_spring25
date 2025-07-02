@@ -3,6 +3,7 @@
 	"files.associations": {
 		"xlocale": "cpp",
 		"limits": "cpp",
-		"utility": "cpp"
+		"utility": "cpp",
+		"ostream": "cpp"
 	}
 }

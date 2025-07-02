@@ -29,8 +29,8 @@
 
 #include <Wire.h>
 
-#define SDA_PIN 21
-#define SCL_PIN 22
+#define SDA_PIN 33
+#define SCL_PIN 25
 void setup() {
   Wire.begin(SDA_PIN,SCL_PIN);
 

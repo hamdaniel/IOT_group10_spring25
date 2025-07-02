@@ -20,7 +20,7 @@ Morse::Morse(BluetoothSerial* bt, Mp3Player* mp3, LedElement* r, BigBtn* bb, Str
     state(MorseState::START_ANIMATION), currentLetterIdx(0),
     currentSymbolIdx(0), lastActionTime(0), start_anim_start_time(millis()), symbolOn(false)
 {
-  pinMode(MORSE_LED_PIN, OUTPUT);
+  
   memset(permutation, 0, sizeof(permutation));
 
   // Copy original word into permutation for optional use
