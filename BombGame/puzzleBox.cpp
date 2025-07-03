@@ -178,34 +178,34 @@ Morse* PuzzleBox::createMorse()
 
 Symbol* PuzzleBox::handleSymbol()
 {
-	Symbol* symbol = nullptr;
+	Symbol* per_Symbols = nullptr;
+	Symbol* orig_Symbols = nullptr;
+	Symbol *symbol = nullptr;
 	String type = readFromBT();
 	if (type=="init"){
 		//time, amount of symbols, and the permutation of the symbols 
 		String time = readFromBT(); //time for solving
 		//convert time to int
 		int time_int = time.toInt() * 1000; // convert to milliseconds
-		Serial.println("Creating Symbol with time: " + time_int);
 		String num_symbols = readFromBT();
 		int num_symbols_int = num_symbols.toInt();
-		Serial.println("Creating Symbol with num_symbols: " + num_symbols);
 	
-		String Symbols[3] = {"0", "0", "0"}; // 3 symbols max, each one is 
+		String orig_Symbols[3] = {"0", "0", "0"}; 
+		String per_Symbols[3] = {"0", "0", "0"};
 		for (int i=0; i < num_symbols_int; i++)
 		{
-			Symbols[i] = readFromBT();
-			Serial.println("Got Symbol: " + Symbols[i]);
+			orig_Symbols[i] = readFromBT();
+
+			per_Symbols[i] = readFromBT();
 		}
-		return new Symbol(SerialBT, mp3, ring, matrix, mat_btns, Symbols, num_symbols_int, time_int);
+		return new Symbol(SerialBT, mp3, ring, matrix, mat_btns, per_Symbols, orig_Symbols, num_symbols_int, time_int);
 	}
 	else if (type=="pass"){
-		Serial.println("Proceeding to next symbol!");
 		symbol = static_cast<Symbol*>(curr_puzzle);
 		symbol->Proceed(1); // Proceed to next symbol
 		
 	}
 	else if (type=="fail"){
-		Serial.println("Ending game!");
 		symbol = static_cast<Symbol*>(curr_puzzle);
 		symbol->Proceed(0); // Proceed to next symbol
 	}
@@ -226,7 +226,6 @@ bool PuzzleBox::isOver()
 {
 	if(puzzles_solved == puzzle_count) // Win logic. No need to send game_over_w, already sent before
 	{
-		Serial.print("winner ");
 		if(curr_puzzle != nullptr)
 			delete curr_puzzle;
 		curr_puzzle = nullptr;
@@ -234,7 +233,6 @@ bool PuzzleBox::isOver()
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic. Need to send game_over_l only if time is up
 	{
-		Serial.print("loser ");
 		if(curr_puzzle != nullptr) // If there is a puzzle, also seeing the puzzle in the app. send message 
 		{
 			SerialBT->println("game_over_l");
