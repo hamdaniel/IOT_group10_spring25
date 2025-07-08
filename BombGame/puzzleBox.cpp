@@ -93,8 +93,9 @@ bool PuzzleBox::validGameName(String name)
   return (
   		  name == "maze" ||
 		  name == "snake" || 
-		  name == "morse" || 
-		  name == "wires"
+		  name == "morse" ||
+		  name == "wires" ||
+		  name == "symbol"
   		 );
 }
 
@@ -112,6 +113,13 @@ void PuzzleBox::startPuzzle(String name)
 	}
 	else if(name == "wires") {
 		curr_puzzle = createWires();
+	}
+	else if(name == "symbol") {
+		curr_puzzle = handleSymbol();
+	}
+	else {
+		Serial.println("Invalid puzzle name: " + name);
+		return;
 	}
 	
 }
@@ -168,6 +176,43 @@ Morse* PuzzleBox::createMorse()
 	return new Morse(SerialBT,mp3,ring,morse_btn,word);
 }
 
+Symbol* PuzzleBox::handleSymbol()
+{
+	Symbol* per_Symbols = nullptr;
+	Symbol* orig_Symbols = nullptr;
+	Symbol *symbol = nullptr;
+	String type = readFromBT();
+	if (type=="init"){
+		//time, amount of symbols, and the permutation of the symbols 
+		String time = readFromBT(); //time for solving
+		//convert time to int
+		int time_int = time.toInt() * 1000; // convert to milliseconds
+		String num_symbols = readFromBT();
+		int num_symbols_int = num_symbols.toInt();
+	
+		String orig_Symbols[3] = {"0", "0", "0"}; 
+		String per_Symbols[3] = {"0", "0", "0"};
+		for (int i=0; i < num_symbols_int; i++)
+		{
+			orig_Symbols[i] = readFromBT();
+
+			per_Symbols[i] = readFromBT();
+		}
+		return new Symbol(SerialBT, mp3, ring, matrix, mat_btns, per_Symbols, orig_Symbols, num_symbols_int, time_int);
+	}
+	else if (type=="pass"){
+		symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(1); // Proceed to next symbol
+		
+	}
+	else if (type=="fail"){
+		symbol = static_cast<Symbol*>(curr_puzzle);
+		symbol->Proceed(0); // Proceed to next symbol
+	}
+	
+	return symbol; // Return the current puzzle, which is a Symbol puzzle
+}
+
 Wires* PuzzleBox::createWires()
 {
 	int num_wires = readFromBT().toInt();
@@ -181,7 +226,6 @@ bool PuzzleBox::isOver()
 {
 	if(puzzles_solved == puzzle_count) // Win logic. No need to send game_over_w, already sent before
 	{
-		Serial.print("winner ");
 		if(curr_puzzle != nullptr)
 			delete curr_puzzle;
 		curr_puzzle = nullptr;
@@ -189,7 +233,6 @@ bool PuzzleBox::isOver()
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic. Need to send game_over_l only if time is up
 	{
-		Serial.print("loser ");
 		if(curr_puzzle != nullptr) // If there is a puzzle, also seeing the puzzle in the app. send message 
 		{
 			SerialBT->println("game_over_l");

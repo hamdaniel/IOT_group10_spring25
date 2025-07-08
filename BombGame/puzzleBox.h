@@ -35,7 +35,7 @@
 
 #include "maze.h"    
 #include "Snake.h"
-
+#include "Symbols.h"
 #include "Morse.h"
 #include "Wires.h"
 
@@ -80,10 +80,9 @@ class PuzzleBox {
 		// Puzzle creators
 		Maze* createMaze();
 		Snake* createSnake();
-
-
 		Morse* createMorse();
 		Wires* createWires();
+		Symbol* handleSymbol();
 		
 		//Helper Functions
 		String readFromBT();
