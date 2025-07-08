@@ -37,7 +37,7 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 
 	timer = new Timer();
 	mp3 = new Mp3Player();
-	mp3->setVolume(20);
+	mp3->setVolume(30);
 
 	Serial.println("PuzzleBox C'tor complete!");
 }
