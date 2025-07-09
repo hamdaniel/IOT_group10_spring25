@@ -140,6 +140,22 @@ void Snake::draw() {
         uint32_t head_color = led_matrix->generateColor(0, 0, 10); // Always blue
         led_matrix->lightPixel(pos, head_color);
     }
+    // Light up all non-snake squares in white
+    for (int x = 0; x < ROW_LEN; x++) {
+        for (int y = 0; y < COL_LEN; y++) {
+            bool is_snake = false;
+            for (int i = 0; i < segments_to_draw; i++) {
+                if (snake_pos[i][0] == x && snake_pos[i][1] == y) {
+                    is_snake = true;
+                    break;
+                }
+            }
+            if (!is_snake) {
+                int pos = calculate_position(x, y);
+                led_matrix->lightPixel(pos, led_matrix->generateColor(5, 5, 5)); // White
+            }
+        }
+    }
     
     if (status != Puzzle::puzzle_status::not_finished)
         return;
