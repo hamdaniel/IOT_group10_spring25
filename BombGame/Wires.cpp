@@ -234,14 +234,14 @@ void Wires::analyzeDetectedConnections() {
 		Serial.print(rightCorrectLeftNot);
 		Serial.println(" wires are connected to the correct right pin, but from the wrong output.");
 		Serial.println(" Any other wire is incorrect on both sides.");
-		left_attempts--;
 
+		left_attempts--;
 		if(!left_attempts)
 			status = Puzzle::puzzle_status::lose_anim;
-			
-		else
-			serialBT->println(String(perfect) + "," + String(leftCorrectRightNot) + "," + String(rightCorrectLeftNot));
 	}
+	
+	serialBT->println(String(perfect) + "," + String(leftCorrectRightNot) + "," + String(rightCorrectLeftNot));
+	
 }
 
 void Wires::play() {
