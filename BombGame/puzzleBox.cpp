@@ -232,12 +232,9 @@ bool PuzzleBox::isOver()
 
 	else if(timer->timeIsUp() || strikes == 0) // Lose logic. Need to send game_over_l only if time is up
 	{
-		if(curr_puzzle != nullptr) // If there is a puzzle, also seeing the puzzle in the app. send message 
-		{
-			SerialBT->println("game_over_l");
+		if(curr_puzzle != nullptr) // If there is a puzzle, delete it
 			delete curr_puzzle;
 
-		}
 		curr_puzzle = nullptr;
 	}
 	else
@@ -254,12 +251,15 @@ bool PuzzleBox::isOver()
 				SerialBT->println("bomb_over_w");
 			else
 			{
-				if(timer->timeIsUp())
-					SerialBT->println("bomb_over_l_time");
-				else
+				if(strikes == 0)
 				{
 					SerialBT->println("game_over_l");
 					SerialBT->println("bomb_over_l_lives");
+				}
+				else
+				{
+					SerialBT->println("game_over_l");
+					SerialBT->println("bomb_over_l_time");
 				}
 			}
 			
