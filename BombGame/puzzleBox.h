@@ -90,7 +90,7 @@ class PuzzleBox {
 		bool isOver();
 
 	public:
-		PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px);
+		PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px, Mp3Player* m);
 		~PuzzleBox();
 		
 		void startPuzzle(String name);

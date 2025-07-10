@@ -9,10 +9,16 @@
   		clock_prescale_set(clock_div_1);
 #endif
 	
+#define BT_CONNECTED_DISCONNECTED_DIR 4
+#define BT_CONNECTED_SOUND 1
+#define BT_DISCONNECTED_SOUND 2
 
 PuzzleBox* pbox = nullptr;
 BluetoothSerial* SerialBT = nullptr;
 Adafruit_NeoPixel* pixels = nullptr;
+Mp3Player* mp3 = nullptr;
+
+bool connected = false;
 
 bool isNumber(const String& str) {
   if (str.length() == 0) return false;
@@ -31,12 +37,34 @@ void setup() {
   pixels = new Adafruit_NeoPixel(TOTAL_PIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 	pixels->begin();
 
-  pbox = new PuzzleBox(SerialBT, pixels);
+  mp3 = new Mp3Player();
+	mp3->setVolume(30);
+
+  pbox = new PuzzleBox(SerialBT, pixels, mp3);
+
   Serial.println("finished setup");
 }
 
 
 void loop() {
+  //check if bluetooth is connected
+  if (!SerialBT->connected()) {
+    if(connected){ // Was connected, now not
+      Serial.println("Bluetooth disconnected!");
+      pbox->cleanupGame();  // Optional: cleanup if disconnected
+      mp3->playFilename(BT_CONNECTED_DISCONNECTED_DIR, BT_DISCONNECTED_SOUND); // Play disconnected sound
+    }
+    connected = false;
+    return; // Exit loop if not connected
+  }
+  else // Connected
+  {
+    if(!connected) { // Was not connected, now is
+      Serial.println("Bluetooth connected!");
+      mp3->playFilename(BT_CONNECTED_DISCONNECTED_DIR, BT_CONNECTED_SOUND); // Play connected sound
+    }
+    connected = true;
+  }
   //read from bluetooth
   if(SerialBT->available()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
   {

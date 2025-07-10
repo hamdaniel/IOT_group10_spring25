@@ -2,14 +2,14 @@
 
 
 // C'tor , D'tor, Start and End Functions
-PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(false),
+PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px, Mp3Player* m) : game_running(false),
 											curr_puzzle(nullptr), puzzle_count(0),
 											puzzles_solved(0), strikes(0), pixels(px),
 											matrix(nullptr), strip(nullptr), ring(nullptr), end_time(0),
 											win_color(px->Color(0,10,0)), lose_color(px->Color(10,0,0)),
 											timer(nullptr),  mat_btns(nullptr), morse_btn(nullptr),
 											outputExpander(nullptr), inputExpander(nullptr),
-											mp3(nullptr), SerialBT(bt)
+											mp3(m), SerialBT(bt)
 											
 {	
 	pinMode(MORSE_LED_PIN, OUTPUT);
@@ -36,8 +36,6 @@ PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px) : game_running(
 
 
 	timer = new Timer();
-	mp3 = new Mp3Player();
-	mp3->setVolume(30);
 
 	Serial.println("PuzzleBox C'tor complete!");
 }
@@ -126,6 +124,7 @@ void PuzzleBox::startPuzzle(String name)
 
 void PuzzleBox::cleanupGame()
 {
+
 	Serial.println("Cleaning up");
 
 	// PuzzleBox Data
