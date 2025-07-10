@@ -34,8 +34,8 @@ private:
     bool buttonDown;
 
     static constexpr unsigned long debounceDelay = 30;
-    static constexpr unsigned long longPressDuration = 1000;
-    static constexpr unsigned long doubleClickThreshold = 500;
+    static constexpr unsigned long longPressDuration = 1500;
+    static constexpr unsigned long doubleClickThreshold = 750;
 
     PressType detectedPress;
 };
