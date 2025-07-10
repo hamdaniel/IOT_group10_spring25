@@ -49,13 +49,12 @@ void setup() {
 void loop() {
   //check if bluetooth is connected
   if (!SerialBT->connected()) {
-    if(connected){ // Was connected, now not
+    if(connected) { // Was connected, now not
       Serial.println("Bluetooth disconnected!");
       pbox->cleanupGame();  // Optional: cleanup if disconnected
       mp3->playFilename(BT_CONNECTED_DISCONNECTED_DIR, BT_DISCONNECTED_SOUND); // Play disconnected sound
     }
     connected = false;
-    return; // Exit loop if not connected
   }
   else // Connected
   {
@@ -66,7 +65,7 @@ void loop() {
     connected = true;
   }
   //read from bluetooth
-  if(SerialBT->available()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
+  if(connected && SerialBT->available()) // Start PuzzleBox || Create New Puzzle || or End PuzzleBox
   {
       String msg = SerialBT->readStringUntil('\n');
       if (isNumber(msg) && msg.toInt() > 0) {
@@ -85,5 +84,9 @@ void loop() {
       }
       
   }
-  pbox->play(); // Play the curent puzzle
+  if(!pbox->play()) // Play the curent puzzle. If returned false, no game is active. Play idle animation
+    pbox->stepIdleAnimation();
+  else
+    pbox->endIdleAnimation();
+  
 }

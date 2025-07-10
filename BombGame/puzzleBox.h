@@ -76,7 +76,20 @@ class PuzzleBox {
 		//BT init
 		BluetoothSerial* SerialBT;
 
-		
+		// For idle animation
+		unsigned long idle_start_time;
+		unsigned long last_ring_update;
+		unsigned long last_glow_update;
+		unsigned long last_matrix_update;
+
+		int ring_offset;
+		int glow_phase;
+		bool increasing;byte idle_column_heights[16];              // Current head Y per column
+		unsigned long idle_column_last_update[16]; // Last update time per column
+		unsigned long idle_column_intervals[16];   // Speed per column (ms per step)
+		int tail_sizes[16]; // Random size of tails in the idle animation
+		bool idle_anim_running;
+
 		// Puzzle creators
 		Maze* createMaze();
 		Snake* createSnake();
@@ -98,7 +111,10 @@ class PuzzleBox {
 		void startGame(int num_puzzles);
 		void cleanupGame();
 
-		void play();
+		bool play();
+
+		void stepIdleAnimation();
+		void endIdleAnimation();
 };
 
 #endif // PUZZLE_BOX_H

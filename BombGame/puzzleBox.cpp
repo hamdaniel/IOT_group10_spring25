@@ -295,18 +295,17 @@ bool PuzzleBox::canCleanup() const
 }
 
 // Main Function
-void PuzzleBox::play()
+bool PuzzleBox::play()
 {
 	
 	if(!game_running) // No puzzle box & finished final visuals, nothing to do here
-	{
-		return;
-	}
+		return false;
+	
 		
 	if(isOver())
 	{
 		pixels->show();
-		return;
+		return true; // Game is over but end animation is not
 	}
 
 	if(curr_puzzle != nullptr) // There is a puzzle to play, play it
@@ -371,6 +370,99 @@ void PuzzleBox::play()
 	
 	pixels->show();	
 
+	return true;
+}
+
+
+void PuzzleBox::stepIdleAnimation() {
+    unsigned long current_time = millis();
+
+    // === INITIALIZATION ===
+    if (!idle_anim_running) {
+        idle_anim_running = true;
+        idle_start_time = current_time;
+
+        ring_offset = 0;
+        glow_phase = 0;
+        increasing = true;
+
+        last_ring_update = current_time;
+        last_glow_update = current_time;
+        last_matrix_update = current_time;
+
+        for (int i = 0; i < 16; i++) {
+            idle_column_heights[i] = random(16);                     // Random start row
+            idle_column_intervals[i] = random(200, 700);              // Random per-column speed
+            idle_column_last_update[i] = current_time - random(150);  // Desync start times
+			tail_sizes[i] = random(2,6);
+        }
+
+        strip->clearPixels();
+        ring->clearPixels();
+        matrix->clearPixels();
+    }
+
+    // === RING ANIMATION ===
+	if (current_time - last_ring_update > 350) {
+		last_ring_update = current_time;
+
+		ring->clearPixels();
+
+		for (int i = 0; i < 5; i++) {
+			int led = (ring_offset + i) % RING_NUM_PIXELS;
+			uint8_t brightness;
+			switch (i) {
+				case 0: brightness = 10; break;
+				case 1: brightness = 20; break;
+				case 2: brightness = 30; break;
+				case 3: brightness = 40;  break;
+				case 4: brightness = 50;  break;
+				default: brightness = 0; break;
+			}
+			ring->lightPixel(led, ring->generateColor(0, 0, brightness));
+		}
+
+		ring_offset = (ring_offset + 1) % RING_NUM_PIXELS;
+	}
+
+    // === STRIP GLOW ===
+    if (current_time - last_glow_update > 50) {
+        last_glow_update = current_time;
+
+        glow_phase += (increasing ? 5 : -5);
+        if (glow_phase >= 255) increasing = false;
+        else if (glow_phase <= 0) increasing = true;
+
+        strip->clearPixels();
+        for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+            strip->lightPixel(i, strip->generateColor(0, 0, glow_phase));
+        }
+    }
+
+    // === MATRIX RAIN ===
+	matrix->clearPixels();
+    for (int col = 0; col < 16; col++) {
+		int head_y = idle_column_heights[col];
+		matrix->lightPixel(col + head_y * 16, matrix->generateColor(0, 0, 10 * tail_sizes[col]));
+		for(int tail_frag = 1; tail_frag <= tail_sizes[col]; tail_frag++)
+		{
+			int tail_y = (head_y - tail_frag + 16) % 16;
+			matrix->lightPixel(col + tail_y * 16, matrix->generateColor(0, 0, 10 * (tail_sizes[col] - tail_frag)));
+		}
+
+		if (current_time - idle_column_last_update[col] >= idle_column_intervals[col])
+		{
+			idle_column_last_update[col] = current_time;
+			idle_column_heights[col] = (head_y + 1) % 16;
+		}
+		
+	}
+
+    pixels->show();
+}
+
+void PuzzleBox::endIdleAnimation() {
+	idle_anim_running = false;
 }
 
 
