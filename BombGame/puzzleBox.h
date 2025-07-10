@@ -77,7 +77,6 @@ class PuzzleBox {
 		BluetoothSerial* SerialBT;
 
 		// For idle animation
-		unsigned long idle_start_time;
 		unsigned long last_ring_update;
 		unsigned long last_glow_update;
 		unsigned long last_matrix_update;

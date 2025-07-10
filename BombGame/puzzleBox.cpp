@@ -2,42 +2,54 @@
 
 
 // C'tor , D'tor, Start and End Functions
-PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px, Mp3Player* m) : game_running(false),
-											curr_puzzle(nullptr), puzzle_count(0),
-											puzzles_solved(0), strikes(0), pixels(px),
-											matrix(nullptr), strip(nullptr), ring(nullptr), end_time(0),
-											win_color(px->Color(0,10,0)), lose_color(px->Color(10,0,0)),
-											timer(nullptr),  mat_btns(nullptr), morse_btn(nullptr),
-											outputExpander(nullptr), inputExpander(nullptr),
-											mp3(m), SerialBT(bt)
-											
-{	
-	pinMode(MORSE_LED_PIN, OUTPUT);
-	digitalWrite(MORSE_LED_PIN, LOW);
-	matrix = new LedMatrix(pixels, 0, MATRIX_NUM_PIXELS);
-	strip = new LedElement(pixels, MATRIX_NUM_PIXELS, STRIP_NUM_PIXELS);
-	ring = new LedElement(pixels, MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS, RING_NUM_PIXELS);
-	
-	matrix->clearPixels();
-	strip->clearPixels();
-	ring->clearPixels();
+PuzzleBox::PuzzleBox(BluetoothSerial* bt, Adafruit_NeoPixel* px, Mp3Player* m) :
+    game_running(false),
+    curr_puzzle(nullptr), puzzle_count(0),
+    puzzles_solved(0), strikes(0),
+    pixels(px),
+    matrix(nullptr), strip(nullptr), ring(nullptr),
+    end_time(0),
+    win_color(px->Color(0, 10, 0)), lose_color(px->Color(10, 0, 0)),
+    timer(nullptr),
+    mat_btns(nullptr), morse_btn(nullptr),
+    outputExpander(nullptr), inputExpander(nullptr),
+    mp3(m), SerialBT(bt),
 
-	outputExpander = new PCF8574(0x20);
-	inputExpander = new PCF8574(0x21);
-	Wire.begin(SDA_PIN, SCL_PIN);
+    // === Idle Animation Initialization ===
+    last_ring_update(0),
+    last_glow_update(0),
+    last_matrix_update(0),
+    ring_offset(0),
+    glow_phase(0),
+    increasing(true),
+    idle_anim_running(false)
+{
+    pinMode(MORSE_LED_PIN, OUTPUT);
+    digitalWrite(MORSE_LED_PIN, LOW);
+
+    matrix = new LedMatrix(pixels, 0, MATRIX_NUM_PIXELS);
+    strip = new LedElement(pixels, MATRIX_NUM_PIXELS, STRIP_NUM_PIXELS);
+    ring = new LedElement(pixels, MATRIX_NUM_PIXELS + STRIP_NUM_PIXELS, RING_NUM_PIXELS);
+
+    matrix->clearPixels();
+    strip->clearPixels();
+    ring->clearPixels();
+
+    outputExpander = new PCF8574(0x20);
+    inputExpander = new PCF8574(0x21);
+    Wire.begin(SDA_PIN, SCL_PIN);
     outputExpander->begin();
     inputExpander->begin();
     pinMode(WIRE_BTN_PIN, INPUT_PULLUP);
 
-	pixels->show();
+    pixels->show();
 
-	mat_btns = new UDRLInput();
-	morse_btn = new BigBtn();
+    mat_btns = new UDRLInput();
+    morse_btn = new BigBtn();
+    timer = new Timer();
 
 
-	timer = new Timer();
-
-	Serial.println("PuzzleBox C'tor complete!");
+    Serial.println("PuzzleBox C'tor complete!");
 }
 
 PuzzleBox::~PuzzleBox()
@@ -380,14 +392,13 @@ void PuzzleBox::stepIdleAnimation() {
     // === INITIALIZATION ===
     if (!idle_anim_running) {
         idle_anim_running = true;
-        idle_start_time = current_time;
 
         ring_offset = 0;
         glow_phase = 0;
         increasing = true;
 
-        last_ring_update = current_time;
-        last_glow_update = current_time;
+        last_ring_update = current_time - 350;
+        last_glow_update = current_time - 50;
         last_matrix_update = current_time;
 
         for (int i = 0; i < 16; i++) {
@@ -434,9 +445,7 @@ void PuzzleBox::stepIdleAnimation() {
         else if (glow_phase <= 0) increasing = true;
 
         strip->clearPixels();
-        for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
-            strip->lightPixel(i, strip->generateColor(0, 0, glow_phase));
-        }
+		strip->lightSolid(strip->generateColor(0, 0, glow_phase));
     }
 
     // === MATRIX RAIN ===
