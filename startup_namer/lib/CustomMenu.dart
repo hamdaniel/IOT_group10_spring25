@@ -32,7 +32,8 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
   int? symbolTime = 45;
   int? symbolLevels = 1;
   int? wiresAttempts = 10;
-  int ?wiresNumber = 5;
+  int? wiresNumber = 5;
+
   void _onGameTap(String game) async {
     if (selectedGames.contains(game)) {
       setState(() {
@@ -89,7 +90,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           wiresNumber = result['number'];
         });
       }
-    }else if (game == "morse") {
+    } else if (game == "morse") {
       final result = await Navigator.push<Map<String, int>>(
         context,
         MaterialPageRoute(
@@ -152,7 +153,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
           connection: widget.connection,
           mazeTime: mazeTime ?? 90,
           mazeVision: mazeVision ?? 1,
-          snakeScoreToBeat: snakeScoreToBeat ?? 100,
+          snakeScoreToBeat: snakeScoreToBeat ?? 10,
           snakeSpeed: snakeSpeed ?? 1.0,
           morseWordLength: morseWordLength ?? 4,
           symbolTime: symbolTime ?? 45,
@@ -192,101 +193,106 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
     final morseImage = 'assets/morse.png';
     final symbolImage = 'assets/symbol.png';
 
-    Widget gameTile(String label, String asset, String key) {
-      final isSelected = selectedGames.contains(key);
-      return GestureDetector(
-        onTap: () => _onGameTap(key),
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            gradient: isSelected
-                ? LinearGradient(
-                    colors: [Colors.purpleAccent, Colors.blueAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : LinearGradient(
-                    colors: [Colors.white10, Colors.white12],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            border: Border.all(
-              color: isSelected ? Colors.amberAccent : Colors.transparent,
-              width: 4,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.amberAccent.withOpacity(0.4),
-                      blurRadius: 16,
-                      offset: Offset(0, 8),
-                    ),
-                  ]
-                : [],
-          ),
-          padding: EdgeInsets.all(8),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Image.asset(asset, width: 90, height: 90),
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: Text("Game Info"),
-                            content: Text(
-                              getGameDescription(key),
-                              style: TextStyle(fontSize: 15),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: Text("OK"),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: EdgeInsets.all(6),
-                        child: Icon(Icons.help_outline, color: Colors.white, size: 26),
-                      ),
-                    ),
-                  ),
-                ],
+Widget gameTile(String label, String asset, String key) {
+  final isSelected = selectedGames.contains(key);
+  return GestureDetector(
+    onTap: () => _onGameTap(key),
+    child: AnimatedContainer(
+      duration: Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        gradient: isSelected
+            ? LinearGradient(
+                colors: [Colors.purpleAccent, Colors.blueAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [Colors.white10, Colors.white12],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.amberAccent : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  letterSpacing: 1,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 4,
-                      color: Colors.black45,
-                      offset: Offset(1, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        border: Border.all(
+          color: isSelected ? Colors.amberAccent : Colors.transparent,
+          width: 4,
         ),
-      );
-    }
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: Colors.amberAccent.withOpacity(0.4),
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ]
+            : [],
+      ),
+      padding: EdgeInsets.all(8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded( // <-- This makes the image flexible!
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.asset(asset, width: 70, height: 70, fit: BoxFit.contain), // reduce size
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  child: GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text("Game Info"),
+                          content: Text(
+                            getGameDescription(key),
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.help_outline, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.amberAccent : Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              letterSpacing: 1,
+              shadows: [
+                Shadow(
+                  blurRadius: 4,
+                  color: Colors.black45,
+                  offset: Offset(1, 2),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
     return Scaffold(
       body: Container(
@@ -362,7 +368,7 @@ class _CustomGameMenuState extends State<CustomGameMenu> {
                         gameTile("Snake", snakeImage, "snake"),
                         gameTile("Wires", wiresImage, "wires"),
                         gameTile("Morse Code", morseImage, "morse"),
-                        gameTile("Symbol", symbolImage, "symbol"), // <-- Add Symbol tile
+                        gameTile("Symbol", symbolImage, "symbol"),
                       ],
                     ),
                     SizedBox(height: 40),

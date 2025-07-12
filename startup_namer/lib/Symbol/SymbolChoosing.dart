@@ -38,9 +38,20 @@ class _SymbolChoosingScreenState extends State<SymbolChoosingScreen> {
     _symbolSubscription = globalInputBroadcast?.listen((Uint8List data) {
       final msg = String.fromCharCodes(data).trim();
       if (msg == "game_over_w") {
-        if (mounted) Navigator.of(context).pop("win");
+        if (mounted) {
+          setState(() {
+            isProcessing = false;
+          });
+          Navigator.of(context).pop("win");
+        }
       } else if (msg == "game_over_l") {
-        if (mounted) Navigator.of(context).pop("lose");
+        print ("Game over: lose");
+        if (mounted) {
+          setState(() {
+            isProcessing = false;
+          });
+          Navigator.of(context).pop("lose");
+        }
       }
     });
   }
@@ -51,117 +62,120 @@ class _SymbolChoosingScreenState extends State<SymbolChoosingScreen> {
     super.dispose();
   }
 
-  void _onSymbolSelected(int selectedIndex) async {
-    if (isProcessing) return;
-    setState(() {
-      isProcessing = true;
-    });
+void _onSymbolSelected(int selectedIndex) async {
+  if (isProcessing) return;
+  setState(() {
+    isProcessing = true;
+  });
 
-    int correctIndex = SymbolPatternsHelper.getSymbolIndex(widget.symbols[currentLevel]);
+  int correctIndex = SymbolPatternsHelper.getSymbolIndex(widget.symbols[currentLevel]);
 
-    if (selectedIndex == correctIndex) {
-      if (currentLevel < widget.symbols.length - 1) {
-        widget.connection?.output.add(Uint8List.fromList("symbol\n".codeUnits));
-        widget.connection?.output.add(Uint8List.fromList("pass\n".codeUnits));
-        print ("Correct symbol selected for level ${currentLevel + 1}");
-        setState(() {
-          currentLevel++;
-          isProcessing = false;
-        });
-      } else {
-        widget.connection?.output.add(Uint8List.fromList("symbol\n".codeUnits));
-        widget.connection?.output.add(Uint8List.fromList("pass\n".codeUnits));
-        print ("Correct symbol selected for level ${currentLevel + 1}");
-        if (mounted) Navigator.of(context).pop("win");
-      }
-    } else {
-      print ("Incorrect symbol selected for level ${currentLevel + 1}");
-      widget.connection?.output.add(Uint8List.fromList("symbol\n".codeUnits));
-      widget.connection?.output.add(Uint8List.fromList("fail\n".codeUnits));
-      if (mounted) Navigator.of(context).pop("lose");
+  if (selectedIndex == correctIndex) {
+    widget.connection?.output.add(Uint8List.fromList("symbol\n".codeUnits));
+    widget.connection?.output.add(Uint8List.fromList("pass\n".codeUnits));
+    print ("Correct symbol selected for level ${currentLevel + 1}");
+
+    // If there are more levels, go to next level after a short delay
+    if (currentLevel < widget.symbols.length - 1) {
+      await Future.delayed(Duration(milliseconds: 600));
+      setState(() {
+        currentLevel++;
+        isProcessing = false;
+      });
     }
+  } else {
+    print ("Incorrect symbol selected for level ${currentLevel + 1}");
+    widget.connection?.output.add(Uint8List.fromList("symbol\n".codeUnits));
+    widget.connection?.output.add(Uint8List.fromList("fail\n".codeUnits));
+    // Wait for game_over_l from ESP
   }
+}
 
   @override
   Widget build(BuildContext context) {
     // Show all 8 symbols as options
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent back navigation
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
-        ),
-        child: Center(
-          child: Card(
-            color: Colors.white.withOpacity(0.13),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            elevation: 12,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Choose the correct symbol",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amberAccent,
-                      letterSpacing: 1.2,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 8,
-                          color: Colors.black54,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    "Level ${currentLevel + 1} of ${widget.symbols.length}",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                  SizedBox(height: 24),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    itemCount: symbolPatterns.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 1,
-                    ),
-                    itemBuilder: (context, idx) {
-                      return GestureDetector(
-                        onTap: isProcessing ? null : () => _onSymbolSelected(idx),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.amberAccent,
-                              width: 2,
+          child: Center(
+            child: Card(
+              color: Colors.white.withOpacity(0.13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              elevation: 12,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Choose the correct symbol",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amberAccent,
+                          letterSpacing: 1.2,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 8,
+                              color: Colors.black54,
+                              offset: Offset(2, 2),
                             ),
-                          ),
-                          padding: EdgeInsets.all(4),
-                          child: CustomPaint(
-                            size: Size(48, 48),
-                            painter: SymbolPainter(symbolPatterns[idx]),
-                          ),
+                          ],
                         ),
-                      );
-                    },
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        "Level ${currentLevel + 1} of ${widget.symbols.length}",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                      SizedBox(height: 24),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        itemCount: symbolPatterns.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 1,
+                        ),
+                        itemBuilder: (context, idx) {
+                          return GestureDetector(
+                            onTap: isProcessing ? null : () => _onSymbolSelected(idx),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.10),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: Colors.amberAccent,
+                                  width: 2,
+                                ),
+                              ),
+                              padding: EdgeInsets.all(4),
+                              child: CustomPaint(
+                                size: Size(48, 48),
+                                painter: SymbolPainter(symbolPatterns[idx]),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      if (isProcessing)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 24.0),
+                          child: CircularProgressIndicator(color: Colors.amberAccent),
+                        ),
+                    ],
                   ),
-                  if (isProcessing)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24.0),
-                      child: CircularProgressIndicator(color: Colors.amberAccent),
-                    ),
-                ],
+                ),
               ),
             ),
           ),

@@ -10,7 +10,6 @@ Future<String> startWiresGame({
   required int attempts,
   required int number,
 }) async {
-
   connection?.output.add(Uint8List.fromList("wires\n".codeUnits));
   connection?.output.add(Uint8List.fromList("$number\n".codeUnits));
   connection?.output.add(Uint8List.fromList("$attempts\n".codeUnits));
@@ -63,7 +62,6 @@ class _WiresGameScreenState extends State<WiresGameScreen> {
   }
 
   void _listenForGameResult() {
-    print("Listening for wires game results...");
     _wiresSubscription = globalInputBroadcast?.listen((Uint8List data) {
       final msg = String.fromCharCodes(data).trim();
       if (msg == "game_over_w") {
@@ -85,7 +83,6 @@ class _WiresGameScreenState extends State<WiresGameScreen> {
       } else {
         final parts = msg.split(',');
         if (parts.length == 3) {
-          print("Received wires data: $parts");
           setState(() {
             perfect = int.tryParse(parts[0]);
             leftCorrectRightNo = int.tryParse(parts[1]);
@@ -123,86 +120,97 @@ class _WiresGameScreenState extends State<WiresGameScreen> {
               elevation: 12,
               child: Container(
                 width: 350,
-                height: 350, 
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center, 
-                  children: [
-                    Icon(Icons.cable, size: 60, color: Colors.amberAccent),
-                    SizedBox(height: 16),
-                    Text(
-                      "Wires Game",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amberAccent,
-                        letterSpacing: 2,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 8,
-                            color: Colors.black54,
-                            offset: Offset(2, 2),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center, 
+                    children: [
+                      Icon(Icons.cable, size: 60, color: Colors.amberAccent),
+                      SizedBox(height: 16),
+                      Text(
+                        "Wires Game",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amberAccent,
+                          letterSpacing: 2,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 8,
+                              color: Colors.black54,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      // Show total wires to connect
+                      Text(
+                        "Total wires to connect: ${widget.number}",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        "Attempts left: ${widget.attempts - currentAttempt + 1}",
+                        style: TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                      SizedBox(height: 16),
+                      Column(
+                        children: [
+                          Text(
+                            "Perfect wires: ${perfect ?? '-'}",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.lightGreenAccent.shade400,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4,
+                                  color: Colors.black45,
+                                  offset: Offset(1, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "Correct pin on left only: ${leftCorrectRightNo ?? '-'}",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.orangeAccent.shade200,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4,
+                                  color: Colors.black45,
+                                  offset: Offset(1, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "Correct pin on right only: ${rightCorrectLeftNo ?? '-'}",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.cyanAccent.shade400,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 4,
+                                  color: Colors.black45,
+                                  offset: Offset(1, 1),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      "Attempts left: ${widget.attempts - currentAttempt + 1}",
-                      style: TextStyle(fontSize: 20, color: Colors.white),
-                    ),
-                    SizedBox(height: 16),
-Column(
-                      children: [
-                        Text(
-                          "Perfect wires: ${perfect ?? '-'}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.lightGreenAccent.shade400,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          "Correct pin on left only: ${leftCorrectRightNo ?? '-'}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.orangeAccent.shade200,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          "Correct pin on right only: ${rightCorrectLeftNo ?? '-'}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.cyanAccent.shade400,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

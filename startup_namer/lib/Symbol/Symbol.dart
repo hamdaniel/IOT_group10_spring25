@@ -200,9 +200,13 @@ Future<String?> startSymbolGame({
   connection?.output.add(Uint8List.fromList("$time\n".codeUnits));
   connection?.output.add(Uint8List.fromList("$levels\n".codeUnits));
   for (int i = 0; i < levels; i++) {
+    await Future.delayed(Duration(milliseconds: 50));
+    String unshuffled_flattened = flattenSymbol(chosenSymbols[i]).join();
+    connection?.output.add(Uint8List.fromList("$unshuffled_flattened\n".codeUnits));
     List<String> shuffled = shuffleSymbol(chosenSymbols[i]);
-    String flattened = flattenSymbol(shuffled).join();
-    connection?.output.add(Uint8List.fromList("$flattened\n".codeUnits));
+    String shuffled_flattened = flattenSymbol(shuffled).join();
+    await Future.delayed(Duration(milliseconds: 50));
+    connection?.output.add(Uint8List.fromList("$shuffled_flattened\n".codeUnits));
   }
 
   final result = await Navigator.of(menuContext).push<String>(

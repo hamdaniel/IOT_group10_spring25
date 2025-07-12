@@ -6,8 +6,8 @@ class WiresSettingsScreen extends StatefulWidget {
 }
 
 class _WiresSettingsScreenState extends State<WiresSettingsScreen> {
-  int attempts = 10;
-  int number = 5;
+  int attempts = 15;
+  int number = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +53,9 @@ class _WiresSettingsScreenState extends State<WiresSettingsScreen> {
                   ),
                   Slider(
                     value: attempts.toDouble(),
-                    min: 8,
-                    max: 12,
-                    divisions: 4,
+                    min: 12,
+                    max: 18,
+                    divisions: 6,
                     label: attempts.toString(),
                     onChanged: (val) {
                       setState(() {
@@ -70,8 +70,8 @@ class _WiresSettingsScreenState extends State<WiresSettingsScreen> {
                   ),
                   Slider(
                     value: number.toDouble(),
-                    min: 4,
-                    max: 6,
+                    min: 3,
+                    max: 5,
                     divisions: 2,
                     label: number.toString(),
                     onChanged: (val) {
