@@ -240,7 +240,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true, // <-- Add this line for gradient behind AppBar
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -270,7 +270,7 @@ class _MyAppState extends State<MyApp> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: SafeArea( // <-- Add SafeArea here
+        child: SafeArea( 
           child: Center(
             child: SingleChildScrollView(
               child: Column(

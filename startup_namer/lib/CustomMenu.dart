@@ -230,11 +230,11 @@ Widget gameTile(String label, String asset, String key) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded( // <-- This makes the image flexible!
+          Expanded(
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Image.asset(asset, width: 70, height: 70, fit: BoxFit.contain), // reduce size
+                Image.asset(asset, width: 70, height: 70, fit: BoxFit.contain),
                 Positioned(
                   top: 2,
                   right: 2,

@@ -7,14 +7,20 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTickerProviderStateMixin {
-  List<List<String>> easy = [];
-  List<List<String>> medium = [];
-  List<List<String>> hard = [];
+  List<List<String>> Easy = [];
+  List<List<String>> Medium = [];
+  List<List<String>> Hard = [];
   late TabController _tabController;
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _loadLeaderboards();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
     _loadLeaderboards();
   }
   @override
@@ -24,20 +30,30 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
     _loadLeaderboards();
   }
 
-  Future<void> _loadLeaderboards() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      easy = (prefs.getStringList('leaderboard_easy') ?? [])
-          .map((e) => e.split('|'))
-          .toList();
-      medium = (prefs.getStringList('leaderboard_medium') ?? [])
-          .map((e) => e.split('|'))
-          .toList();
-      hard = (prefs.getStringList('leaderboard_hard') ?? [])
-          .map((e) => e.split('|'))
-          .toList();
-    });
-  }
+Future<void> _loadLeaderboards() async {
+  final prefs = await SharedPreferences.getInstance();
+  setState(() {
+    Easy = (prefs.getStringList('leaderboard_Easy') ?? [])
+        .map((e) => e.split('|'))
+        .toList();
+    Medium = (prefs.getStringList('leaderboard_Medium') ?? [])
+        .map((e) => e.split('|'))
+        .toList();
+    Hard = (prefs.getStringList('leaderboard_Hard') ?? [])
+        .map((e) => e.split('|'))
+        .toList();
+
+    int parseTime(List<String> entry) {
+      if (entry.length < 2) return 99999;
+      final parts = entry[1].split(':');
+      if (parts.length != 2) return 99999;
+      return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+    }
+    Easy.sort((a, b) => parseTime(a).compareTo(parseTime(b)));
+    Medium.sort((a, b) => parseTime(a).compareTo(parseTime(b)));
+    Hard.sort((a, b) => parseTime(a).compareTo(parseTime(b)));
+  });
+}
 
   Widget _buildSection(List<List<String>> data) {
     return Column(
@@ -127,9 +143,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> with SingleTicker
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildSection(easy),
-                _buildSection(medium),
-                _buildSection(hard),
+                _buildSection(Easy),
+                _buildSection(Medium),
+                _buildSection(Hard),
               ],
             ),
           ),

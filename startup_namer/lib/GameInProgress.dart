@@ -43,7 +43,7 @@ class GameSelectionScreen extends StatefulWidget {
 }
 
 class _GameSelectionScreenState extends State<GameSelectionScreen> {
-    bool isGameStarting = false; 
+  bool isGameStarting = false;
   Set<String> completedGames = {};
   StreamSubscription<Uint8List>? _bombSubscription;
   bool _bombDialogShown = false;
@@ -55,7 +55,6 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
   void initState() {
     super.initState();
     _startTime = DateTime.now();
-    // Always recreate the broadcast stream for a new game session
     if (widget.connection?.input != null && globalInputBroadcast == null) {
       globalInputBroadcast = widget.connection!.input!.asBroadcastStream();
     }
@@ -102,7 +101,7 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => WillPopScope(
-        onWillPop: () async => false, // Prevent back navigation
+        onWillPop: () async => false,
         child: AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           titlePadding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
@@ -181,10 +180,10 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
   }
 
   Future<void> _startGame(String game) async {
-      if (isGameStarting) return;
-      setState(() {
-        isGameStarting = true;
-      });
+    if (isGameStarting) return;
+    setState(() {
+      isGameStarting = true;
+    });
     if (game == "maze") {
       final result = await startMazeGame(
         menuContext: context,
@@ -249,117 +248,67 @@ class _GameSelectionScreenState extends State<GameSelectionScreen> {
         ),
       );
     }
-      setState(() {
-    isGameStarting = false;
-  });
+    setState(() {
+      isGameStarting = false;
+    });
   }
 
-Future<void> _showWinDialogAndSave() async {
-  if (_showedWinDialog) return;
-  _showedWinDialog = true;
-  final duration = DateTime.now().difference(_startTime!);
+  Future<void> _showWinDialogAndSave() async {
+    if (_showedWinDialog) return;
+    _showedWinDialog = true;
+    final duration = DateTime.now().difference(_startTime!);
 
-  String tempName = "";
+    String tempName = "";
 
-  Widget dialogContent({required Widget child}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.emoji_events, color: Colors.amber, size: 60),
-        SizedBox(height: 12),
-        Text(
-          "Congratulations!",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber[700],
-            letterSpacing: 1.2,
-            shadows: [
-              Shadow(
-                blurRadius: 8,
-                color: Colors.black26,
-                offset: Offset(2, 2),
-              ),
-            ],
+    Widget dialogContent({required Widget child}) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.emoji_events, color: Colors.amber, size: 60),
+          SizedBox(height: 12),
+          Text(
+            "Congratulations!",
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber[700],
+              letterSpacing: 1.2,
+              shadows: [
+                Shadow(
+                  blurRadius: 8,
+                  color: Colors.black26,
+                  offset: Offset(2, 2),
+                ),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: 8),
-        Divider(thickness: 2, color: Colors.amber[200]),
-        SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-
-  if (gameDifficulty == "Custom") {
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: dialogContent(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "You defused the custom bomb in ${_formatDuration(duration)}.",
-                style: TextStyle(fontSize: 18),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 18),
-              Text(
-                "Since the game mode is custom, you cannot add it to the leaderboard.",
-                style: TextStyle(fontSize: 15, color: Colors.grey[700]),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text("Return to Menu"),
-          ),
+          SizedBox(height: 8),
+          Divider(thickness: 2, color: Colors.amber[200]),
+          SizedBox(height: 8),
+          child,
         ],
-      ),
-    );
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    return;
-  }
+      );
+    }
 
-  final name = await showDialog<String>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
+    if (gameDifficulty == "Custom") {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           content: dialogContent(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Your time is ${_formatDuration(duration)}.',
+                  "You defused the custom bomb in ${_formatDuration(duration)}.",
                   style: TextStyle(fontSize: 18),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: "Enter your name",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onChanged: (val) => tempName = val,
-                  textAlign: TextAlign.center,
-                  maxLength: 16,
-                ),
-                SizedBox(height: 8),
+                SizedBox(height: 18),
                 Text(
-                  "Your name will appear on the leaderboard!",
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  "Since the game mode is custom, you cannot add it to the leaderboard.",
+                  style: TextStyle(fontSize: 15, color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -367,27 +316,82 @@ Future<void> _showWinDialogAndSave() async {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(tempName);
-              },
-              child: Text("Submit"),
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Return to Menu"),
             ),
           ],
         ),
       );
-    },
-  );
-  if (name != null && name.trim().isNotEmpty) {
-    await _addToLeaderboardWithMode(name.trim(), _formatDuration(duration), gameDifficulty);
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
+
+    final name = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            content: SingleChildScrollView(
+              child: dialogContent(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Your time is ${_formatDuration(duration)}.',
+                      style: TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: "Enter your name",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onChanged: (val) => tempName = val,
+                      textAlign: TextAlign.center,
+                      maxLength: 16,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Your name will appear on the leaderboard!",
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(tempName);
+                },
+                child: Text("Submit"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (name != null && name.trim().isNotEmpty) {
+      await _addToLeaderboardWithMode(name.trim(), _formatDuration(duration), gameDifficulty);
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
-  Navigator.of(context).popUntil((route) => route.isFirst);
-}
 
   Future<void> _addToLeaderboardWithMode(String name, String time, String difficulty) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'leaderboard_$difficulty';
     final List<String> leaderboard = prefs.getStringList(key) ?? [];
     leaderboard.add('$name|$time');
+    print ("adding to the leaderboard with mode $difficulty: $name|$time");
     await prefs.setStringList(key, leaderboard);
   }
 
@@ -396,166 +400,166 @@ Future<void> _showWinDialogAndSave() async {
     return "${twoDigits(d.inMinutes)}:${twoDigits(d.inSeconds % 60)}";
   }
 
-@override
-Widget build(BuildContext context) {
-  final gameImages = {
-    "maze": 'assets/maze.png',
-    "snake": 'assets/snake.png',
-    "wires": 'assets/wires.png',
-    "morse": 'assets/morse.png',
-    "symbol": 'assets/symbol.png',
-  };
+  @override
+  Widget build(BuildContext context) {
+    final gameImages = {
+      "maze": 'assets/maze.png',
+      "snake": 'assets/snake.png',
+      "wires": 'assets/wires.png',
+      "morse": 'assets/morse.png',
+      "symbol": 'assets/symbol.png',
+    };
 
-  return WillPopScope(
-    onWillPop: () async => false,
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text("Play Selected Games"),
-        automaticallyImplyLeading: false,
-      ),
-      body: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: ListView(
-            padding: EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-            children: [
-              Text(
-                "Tap a game to play it:",
-                style: TextStyle(fontSize: 18, color: Colors.white),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Play Selected Games"),
+          automaticallyImplyLeading: false,
+        ),
+        body: SafeArea(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.deepPurple.shade800, Colors.blue.shade600, Colors.cyan.shade400],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              SizedBox(height: 20),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                mainAxisSpacing: 24,
-                crossAxisSpacing: 24,
-                childAspectRatio: 0.95,
-                physics: NeverScrollableScrollPhysics(),
-                children: widget.selectedGames.map((game) {
-                  final isDone = completedGames.contains(game);
-                  return GestureDetector(
-                    onTap: isDone ? null : () => _startGame(game),
-                    child: Opacity(
-                      opacity: isDone ? 0.4 : 1.0,
-                      child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isDone ? Colors.greenAccent.shade400 : Colors.transparent,
-                            width: isDone ? 8 : 4,
+            ),
+            child: ListView(
+              padding: EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+              children: [
+                Text(
+                  "Tap a game to play it:",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  mainAxisSpacing: 24,
+                  crossAxisSpacing: 24,
+                  childAspectRatio: 0.95,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: widget.selectedGames.map((game) {
+                    final isDone = completedGames.contains(game);
+                    return GestureDetector(
+                      onTap: (isGameStarting || isDone) ? null : () => _startGame(game),
+                      child: Opacity(
+                        opacity: isDone ? 0.4 : 1.0,
+                        child: Container(
+                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: isDone ? Colors.greenAccent.shade400 : Colors.transparent,
+                              width: isDone ? 8 : 4,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            color: isDone
+                                ? Colors.greenAccent.withOpacity(0.18)
+                                : Colors.white.withOpacity(0.13),
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          color: isDone
-                              ? Colors.greenAccent.withOpacity(0.18)
-                              : Colors.white.withOpacity(0.13),
-                        ),
-                        padding: EdgeInsets.all(4),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded( // <-- Make the image flexible
-                              child: Stack(
-                                children: [
-                                  Image.asset(
-                                    gameImages[game] ?? '',
-                                    width: 70, // reduce size
-                                    height: 70,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  if (!isDone)
-                                    Positioned(
-                                      top: 2,
-                                      right: 2,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          _helpDialogOpen = true;
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => AlertDialog(
-                                              title: Text("Game Info"),
-                                              content: Text(getGameDescription(game)),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () {
-                                                    _helpDialogOpen = false;
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: Text("OK"),
-                                                ),
-                                              ],
+                          padding: EdgeInsets.all(4),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    Image.asset(
+                                      gameImages[game] ?? '',
+                                      width: 70,
+                                      height: 70,
+                                      fit: BoxFit.contain,
+                                    ),
+                                    if (!isDone)
+                                      Positioned(
+                                        top: 2,
+                                        right: 2,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            _helpDialogOpen = true;
+                                            showDialog(
+                                              context: context,
+                                              builder: (_) => AlertDialog(
+                                                title: Text("Game Info"),
+                                                content: Text(getGameDescription(game)),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      _helpDialogOpen = false;
+                                                      Navigator.of(context).pop();
+                                                    },
+                                                    child: Text("OK"),
+                                                  ),
+                                                ],
+                                              ),
+                                            ).then((_) {
+                                              _helpDialogOpen = false;
+                                            });
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black54,
+                                              shape: BoxShape.circle,
                                             ),
-                                          ).then((_) {
-                                            _helpDialogOpen = false;
-                                          });
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.black54,
-                                            shape: BoxShape.circle,
+                                            padding: EdgeInsets.all(6),
+                                            child: Icon(Icons.help_outline, color: Colors.white, size: 20),
                                           ),
-                                          padding: EdgeInsets.all(6),
-                                          child: Icon(Icons.help_outline, color: Colors.white, size: 20),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "${game[0].toUpperCase()}${game.substring(1)}",
-                              style: TextStyle(
-                                color: isDone ? Colors.greenAccent.shade400 : Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                              SizedBox(height: 4),
+                              Text(
+                                "${game[0].toUpperCase()}${game.substring(1)}",
+                                style: TextStyle(
+                                  color: isDone ? Colors.greenAccent.shade400 : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                            if (isDone)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2.0),
-                                child: Icon(Icons.check, color: Colors.greenAccent.shade400, size: 20),
-                              ),
-                          ],
+                              if (isDone)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: Icon(Icons.check, color: Colors.greenAccent.shade400, size: 20),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 40),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24.0, top: 8.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: completedGames.length == widget.selectedGames.length
-                      ? null // Disable if all games are completed
-                      : () {
-                          widget.connection?.output.add(Uint8List.fromList("exit\n".codeUnits));
-                          Navigator.of(context).popUntil((route) => route.isFirst);
-                        },
-                  child: Text("Exit game"),
+                    );
+                  }).toList(),
                 ),
-              ),
-            ],
+                SizedBox(height: 40),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 24.0, top: 8.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: completedGames.length == widget.selectedGames.length
+                        ? null
+                        : () {
+                            widget.connection?.output.add(Uint8List.fromList("exit\n".codeUnits));
+                            Navigator.of(context).popUntil((route) => route.isFirst);
+                          },
+                    child: Text("Exit game"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

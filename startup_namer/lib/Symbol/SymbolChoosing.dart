@@ -95,7 +95,7 @@ void _onSymbolSelected(int selectedIndex) async {
   Widget build(BuildContext context) {
     // Show all 8 symbols as options
     return WillPopScope(
-      onWillPop: () async => false, // Prevent back navigation
+      onWillPop: () async => false,
       child: Scaffold(
         body: Container(
           decoration: BoxDecoration(
