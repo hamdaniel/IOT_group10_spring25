@@ -183,7 +183,7 @@ class _MyAppState extends State<MyApp> {
       connection!.output.add(Uint8List.fromList('$gameTimeSeconds\n'.codeUnits),);
 
     } else if (difficulty == "Medium") {
-      gameTimeMinutes=10;
+      gameTimeMinutes=12;
       mazeTime = 120;
       mazeVision = 2;
       snakeScoreToBeat = 10;
@@ -198,7 +198,7 @@ class _MyAppState extends State<MyApp> {
       connection!.output.add(Uint8List.fromList('$gameTimeSeconds\n'.codeUnits),);
 
     } else if (difficulty == "Hard") {
-      gameTimeMinutes=5;
+      gameTimeMinutes=10;
       mazeTime = 60;
       mazeVision = 1;
       snakeScoreToBeat = 15;
