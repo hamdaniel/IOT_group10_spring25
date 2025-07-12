@@ -266,11 +266,13 @@ bool PuzzleBox::isOver()
 				if(strikes == 0)
 				{
 					SerialBT->println("game_over_l");
+					delay(250);
 					SerialBT->println("bomb_over_l_lives");
 				}
 				else
 				{
 					SerialBT->println("game_over_l");
+					delay(250);
 					SerialBT->println("bomb_over_l_time");
 				}
 			}
