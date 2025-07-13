@@ -50,6 +50,7 @@ class _SymbolChoosingScreenState extends State<SymbolChoosingScreen> {
           setState(() {
             isProcessing = false;
           });
+          
           Navigator.of(context).pop("lose");
         }
       }

@@ -41,10 +41,8 @@ class _CompassDialogState extends State<CompassDialog> {
     _mazeSubscription = globalInputBroadcast?.listen((Uint8List data) {
       String msg = String.fromCharCodes(data).trim();
       if (msg == "game_over_w") {
-        // User won: pop dialog and return "win"
         Navigator.of(context).pop("win");
       } else if (msg == "game_over_l") {
-        // User lost: pop dialog and return "lose"
         Navigator.of(context).pop("lose");
       } else if (msg.length == 3 && int.tryParse(msg) != null) {
         int value = int.parse(msg);

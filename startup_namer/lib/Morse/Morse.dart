@@ -72,7 +72,6 @@ class _MorseWaitScreenState extends State<MorseWaitScreen> {
         if (_helpDialogOpen) {
           Navigator.of(context, rootNavigator: true).pop();
           _helpDialogOpen = false;
-          // Wait a short moment to ensure the dialog is closed
           await Future.delayed(Duration(milliseconds: 100));
         }
         Navigator.of(context).pop(msg == "game_over_w" ? "win" : "lose");
