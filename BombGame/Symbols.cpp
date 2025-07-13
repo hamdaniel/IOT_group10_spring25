@@ -77,6 +77,9 @@ Symbol::~Symbol() {
 }
 
 void Symbol::Proceed(int isNext) {
+    if(getStatus() != Puzzle::puzzle_status::not_finished) {
+        return; // Do nothing if the puzzle is not in progress
+    }
     if (isNext==1) {
         //print values of current_symbol and max_symbol
         if(current_symbol < max_symbol-1) {
