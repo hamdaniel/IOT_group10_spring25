@@ -31,18 +31,26 @@ void setup() {
   }
   select_SD_card();  //ALWAYS select SD card at beginning
   delay(1200);       //indexing the files on your SD card will take at least 1 second. let the operation finish in the background before trying to play a file.
+
+  set_volume(20);
 }
 
 void loop() {
 
-
-  set_volume(30);
   play_filename(1, 1);
-  delay(3000);
-  set_volume(30);
+  delay(6000);
+
   play_filename(1, 2);
-  delay(3000);
-  set_volume(30);
+  delay(6000);
+
+  play_filename(2, 1);
+  delay(6000);
+
+  play_filename(3, 1);
+  delay(6000);
+
+  play_filename(3, 2);
+  delay(6000);
 }
 
 bool reset_mp3() {

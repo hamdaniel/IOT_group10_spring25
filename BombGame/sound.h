@@ -4,12 +4,8 @@
 #include <HardwareSerial.h>
 #include <Arduino.h>
 
-#define MAZE_DIR 1
-#define MAZE_WIN 1
-#define MAZE_LOSS 2
-
 #define TX_PIN 25
-#define RX_PIN 26
+#define RX_PIN 4
 #define MP3_BAUD 9600
 
 class Mp3Player {
