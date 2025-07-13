@@ -49,7 +49,7 @@ class _SymbolSettingsScreenState extends State<SymbolSettingsScreen> {
                   ),
                   SizedBox(height: 32),
                   Text(
-                    "Time to complete level: $time seconds",
+                    "Time to complete: $time seconds",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   Slider(
