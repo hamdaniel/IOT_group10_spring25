@@ -1,13 +1,14 @@
 ## Escape game Project by Idan Hermelin, Ron Cohen, Daniel Hamzany :  
   
 ## Details about the project
- This project has two 
+ This project includes an android application and a puzzle box managed by an ESP32 micro-controller. Use the app to connect via BT to the Puzzle box. Configure and initiate it and start solving the puzzles. Use hints from the app, and track your best solving times.
+
 ## Folder description :
 * Documentation: wiring diagram + controp flow diagram
 * Tests: hardware unit tests, communication tests, and other logic tests
 * flutter_app : dart code for our Flutter app.
 * ESP32: the main code that runs on the micro-controller.
-* Assets: link to 3D printed parts, Audio files used in this project, Fritzing file for connection diagram (FZZ format) etc
+* upload_sketch.py : a python script we used to make compiling and uploading code to the esp more efficient
 
 ## ESP32 SDK version used in this project: 
 * 2.0.17
